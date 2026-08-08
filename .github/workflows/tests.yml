@@ -18,22 +18,17 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
       - name: Install dependencies
         run: |
-          python --version
-          python -m pip --version
-          python -m pip install --upgrade pip setuptools wheel
           python -m pip install pytest pytest-cov
-        continue-on-error: true
 
       - name: Install package
         run: |
-          python -m pip install -e . -v
-        continue-on-error: true
+          python -m pip install .
 
       - name: Run tests with pytest
         run: |
