@@ -106,23 +106,73 @@
     return out;
   }
 
+  // Blocos ^XA...^XZ completos ([\s\S] porque JS não tem flag DOTALL).
+  const ZPL_BLOCK_RE = /\^XA[\s\S]*?\^XZ/g;
+
+  // Comandos que realmente colocam algo no papel. Um bloco sem nenhum deles é
+  // manutenção (^ID apaga gráfico da memória, ^DF salva formato).
+  const PRINTABLE_RE = /\^(?:XG|GF|FD|FV|B[0-9A-Za-z])/i;
+
   /**
    * Alguns arquivos trazem várias etiquetas concatenadas no mesmo TXT.
    *
-   * O delimitador correto é o ^XA: toda etiqueta ZPL é um bloco ^XA...^XZ e o
-   * ~DG da imagem vem *dentro* dele. Cortar no ~DG separaria o cabeçalho
-   * (^XA^PW^LL) da imagem e criaria uma etiqueta fantasma em branco.
+   * Uma etiqueta da Shopee não é um bloco só — são três, nesta ordem:
+   *
+   *   ~DGR:DEMO.GRF,124236,102,:Z64:...   baixa a imagem para a impressora
+   *   ^XA ... ^XGR:DEMO.GRF,1,1 ... ^XZ   manda imprimir a imagem baixada
+   *   ^XA ^IDR:DEMO.GRF ^FS ^XZ           apaga a imagem da memória
+   *
+   * Os três formam UMA etiqueta. Cortar em todo ^XA devolvia três, sendo que
+   * duas apareciam em branco (o ^XG chama um gráfico que ficou no pedaço
+   * anterior, e o ^ID não desenha nada).
+   *
+   * Regra: cada bloco ^XA...^XZ que imprime algo começa uma etiqueta nova e
+   * leva junto o que veio antes dele (o ~DG) e os blocos de manutenção
+   * que vierem depois.
    */
   function splitLabels(content) {
-    let parts;
-    if (content.includes("^XA")) {
-      parts = content.split(/(?=\^XA)/);
-    } else if (content.includes("~DG")) {
-      parts = content.split(/(?=~DG)/);
-    } else {
-      parts = [content];
+    const blocks = [...content.matchAll(ZPL_BLOCK_RE)];
+
+    if (blocks.length === 0) {
+      // Sem nenhum ^XA...^XZ fechado: arquivo só de downloads, ou truncado.
+      let parts;
+      if (content.includes("~DG")) parts = content.split(/(?=~DG)/);
+      else if (content.includes("^XA")) parts = content.split(/(?=\^XA)/);
+      else parts = [content];
+      return parts.filter((part) => part.trim().length > 0);
     }
-    return parts.filter((part) => part.trim().length > 0);
+
+    const labels = [];
+    let current = null;
+    let pending = "";
+    let lastEnd = 0;
+
+    for (const match of blocks) {
+      pending += content.slice(lastEnd, match.index);
+      const block = match[0];
+      lastEnd = match.index + block.length;
+
+      if (PRINTABLE_RE.test(block)) {
+        if (current !== null) labels.push(current);
+        current = pending + block;
+        pending = "";
+      } else if (current !== null) {
+        current += pending + block;
+        pending = "";
+      } else {
+        pending += block;
+      }
+    }
+
+    const tail = content.slice(lastEnd);
+    if (current !== null) {
+      if (tail.trim()) current += tail;
+      labels.push(current);
+    } else if ((pending + tail).trim()) {
+      labels.push(pending + tail);
+    }
+
+    return labels.filter((label) => label.trim().length > 0);
   }
 
   /**

@@ -13,6 +13,41 @@ e este projeto segue [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 - ⏳ Impressão de várias etiquetas de uma vez na versão web
 - ⏳ Suporte a múltiplos idiomas (i18n)
 
+## [0.3.1] - 2026-08-08
+
+### Corrigido
+- **Uma etiqueta da Shopee aparecia como três, sendo duas em branco.**
+  Conferido com um ZIP real baixado do painel: a etiqueta não é um bloco ZPL
+  só, são três, nesta ordem:
+
+  ```
+  ~DGR:DEMO.GRF,124236,102,:Z64:...   baixa a imagem para a impressora
+  ^XA ... ^XGR:DEMO.GRF,1,1 ... ^XZ   manda imprimir a imagem baixada
+  ^XA ^IDR:DEMO.GRF ^FS ^XZ           apaga a imagem da memória
+  ```
+
+  A separação cortava em todo `^XA` e devolvia os três pedaços como etiquetas
+  distintas. Só o primeiro tinha imagem; o segundo chamava um gráfico que
+  ficara no pedaço anterior e o terceiro só apagava memória — daí os dois
+  brancos no preview. Pior: no "Imprimir todas" os três iam para a impressora
+  como se fossem etiquetas de verdade.
+
+  Agora cada bloco `^XA...^XZ` que imprime alguma coisa começa uma etiqueta e
+  leva junto o `~DG` que veio antes e os blocos de manutenção que vêm depois.
+  Corrigido nas duas versões (`parser.py` e `docs/zip.js`).
+
+- **O `.exe` nunca teria sido gerado**: o workflow apontava o PyInstaller para
+  `__main__.py`, que usa import relativo e falha quando executado como script
+  solto. Novo `run_app.py` como ponto de entrada, com `--paths src`.
+- Aviso do preview aparecia cortado ao abrir o programa (`winfo_width()`
+  devolve 1 antes do primeiro layout).
+
+### Adicionado
+- `workflow_dispatch` no build: dá para gerar o `.exe` pelo botão "Run workflow"
+  na aba Actions, sem criar tag e sem usar o terminal
+- O `.exe` é anexado como artefato em toda execução, não só quando há tag
+- `permissions: contents: write`, necessário para o passo de Release publicar
+
 ## [0.3.0] - 2026-08-08
 
 ### Adicionado

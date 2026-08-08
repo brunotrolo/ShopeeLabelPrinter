@@ -71,24 +71,76 @@ def find_label_files(folder: str) -> List[str]:
     return sorted(files)
 
 
+# Blocos ^XA...^XZ completos. DOTALL porque o bloco pode ter quebras de linha.
+_ZPL_BLOCK_RE = re.compile(r"\^XA.*?\^XZ", re.DOTALL)
+
+# Comandos que realmente colocam algo no papel. Um bloco sem nenhum deles é
+# manutenção (^ID apaga gráfico da memória, ^DF salva formato) e não é etiqueta.
+_PRINTABLE_RE = re.compile(r"\^(?:XG|GF|FD|FV|B[0-9A-Za-z])", re.IGNORECASE)
+
+
 def split_labels(content: str) -> List[str]:
     """
     Alguns arquivos trazem mais de uma etiqueta concatenada no mesmo TXT.
     Divide o conteúdo em blocos individuais, um por etiqueta.
 
-    O delimitador correto é o ^XA: toda etiqueta ZPL é um bloco ^XA...^XZ, e
-    o ~DG da imagem vem *dentro* dele. Cortar no ~DG separaria o cabeçalho
-    (^XA^PW^LL) da imagem e criaria uma etiqueta fantasma em branco.
-    O corte por ~DG só serve para arquivos que não têm ^XA nenhum.
-    """
-    if "^XA" in content:
-        parts = re.split(r"(?=\^XA)", content)
-    elif "~DG" in content:
-        parts = re.split(r"(?=~DG)", content)
-    else:
-        parts = [content]
+    Uma etiqueta da Shopee não é um bloco só — são três, nesta ordem:
 
-    return [p for p in parts if p.strip()]
+        ~DGR:DEMO.GRF,124236,102,:Z64:...   baixa a imagem para a impressora
+        ^XA ... ^XGR:DEMO.GRF,1,1 ... ^XZ   manda imprimir a imagem baixada
+        ^XA ^IDR:DEMO.GRF ^FS ^XZ           apaga a imagem da memória
+
+    Os três formam UMA etiqueta. Cortar em todo ^XA devolvia três, sendo que
+    duas apareciam em branco no preview (o ^XG chama um gráfico que ficou no
+    pedaço anterior, e o ^ID não desenha nada) — e as duas eram enviadas à
+    impressora como se fossem etiquetas de verdade.
+
+    A regra usada aqui: cada bloco ^XA...^XZ que imprime alguma coisa começa
+    uma etiqueta nova e leva junto o que veio antes dele (o ~DG) e os blocos
+    de manutenção que vierem depois.
+    """
+    blocks = list(_ZPL_BLOCK_RE.finditer(content))
+
+    if not blocks:
+        # Sem nenhum ^XA...^XZ fechado: arquivo só de downloads, ou truncado.
+        if "~DG" in content:
+            parts = re.split(r"(?=~DG)", content)
+        elif "^XA" in content:
+            parts = re.split(r"(?=\^XA)", content)
+        else:
+            parts = [content]
+        return [p for p in parts if p.strip()]
+
+    labels: List[str] = []
+    current: str | None = None
+    pending = ""        # material fora de bloco (o ~DG mora aqui)
+    last_end = 0
+
+    for match in blocks:
+        pending += content[last_end:match.start()]
+        block = match.group(0)
+        last_end = match.end()
+
+        if _PRINTABLE_RE.search(block):
+            if current is not None:
+                labels.append(current)
+            current = pending + block
+            pending = ""
+        elif current is not None:
+            current += pending + block
+            pending = ""
+        else:
+            pending += block
+
+    tail = content[last_end:]
+    if current is not None:
+        if tail.strip():
+            current += tail
+        labels.append(current)
+    elif (pending + tail).strip():
+        labels.append(pending + tail)
+
+    return [label for label in labels if label.strip()]
 
 
 def load_labels_from_path(path: str) -> List[Tuple[str, bytes]]:

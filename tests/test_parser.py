@@ -74,6 +74,63 @@ class TestSplitLabels:
         assert len(result) == 2
 
 
+class TestSplitLabelsFormatoRealShopee:
+    """
+    Formato real de uma etiqueta baixada da Shopee (conferido com um ZIP de
+    verdade): a etiqueta é montada em três blocos ZPL, não em um só.
+
+        ~DGR:DEMO.GRF,124236,102,:Z64:...   baixa a imagem
+        ^XA ... ^XGR:DEMO.GRF,1,1 ... ^XZ   imprime a imagem baixada
+        ^XA ^IDR:DEMO.GRF ^FS ^XZ           apaga a imagem da memória
+    """
+
+    DOWNLOAD = "~DGR:DEMO.GRF,4,2,FFFF0000"
+    PRINT = "^XA^MMT,Y^PON^MNY^FO0,0^XGR:DEMO.GRF,1,1^FS^PQ1,0,0,N^XZ"
+    CLEANUP = "^XA^IDR:DEMO.GRF^FS^XZ"
+
+    def test_three_blocks_are_one_label(self):
+        """Os três blocos formam UMA etiqueta, não três."""
+        result = split_labels(self.DOWNLOAD + self.PRINT + self.CLEANUP)
+        assert len(result) == 1
+
+    def test_the_label_keeps_its_graphic(self):
+        """
+        O ~DG precisa acompanhar o ^XG que o chama — senão o preview sai em
+        branco e a impressora recebe um bloco sem imagem.
+        """
+        result = split_labels(self.DOWNLOAD + self.PRINT + self.CLEANUP)
+        assert "~DGR:DEMO.GRF" in result[0]
+        assert "^XGR:DEMO.GRF" in result[0]
+
+    def test_cleanup_block_is_not_a_label(self):
+        """O ^ID só apaga da memória: não pode virar etiqueta em branco."""
+        result = split_labels(self.DOWNLOAD + self.PRINT + self.CLEANUP)
+        assert len(result) == 1
+        assert "^IDR:DEMO.GRF" in result[0]
+
+    def test_two_real_labels_keep_their_own_graphics(self):
+        """Duas etiquetas no mesmo arquivo: cada uma leva o seu próprio ~DG."""
+        first = "~DGR:A.GRF,4,2,FFFF0000^XA^FO0,0^XGR:A.GRF,1,1^FS^XZ^XA^IDR:A.GRF^FS^XZ"
+        second = "~DGR:B.GRF,4,2,0000FFFF^XA^FO0,0^XGR:B.GRF,1,1^FS^XZ^XA^IDR:B.GRF^FS^XZ"
+
+        result = split_labels(first + second)
+
+        assert len(result) == 2
+        assert "~DGR:A.GRF" in result[0] and "^XGR:A.GRF" in result[0]
+        assert "~DGR:B.GRF" in result[1] and "^XGR:B.GRF" in result[1]
+        # o ~DG da segunda não pode vazar para a primeira
+        assert "~DGR:B.GRF" not in result[0]
+
+    def test_no_label_renders_blank(self):
+        """Toda etiqueta devolvida precisa ter algo que imprima."""
+        from src.shopee_label_printer.renderer import render_zpl
+
+        result = split_labels(self.DOWNLOAD + self.PRINT + self.CLEANUP)
+        for label in result:
+            render = render_zpl(label.encode("latin-1"), default_width=16, default_height=2)
+            assert sum(render.pixels) > 0, "etiqueta saiu em branco no preview"
+
+
 class TestFindLabelFiles:
     """Testes para a função find_label_files."""
 

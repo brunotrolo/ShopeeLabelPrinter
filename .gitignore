@@ -132,3 +132,6 @@ Thumbs.db
 # Temp files
 *.tmp
 temp/
+
+# Artefatos de teste gerados localmente
+etiqueta_teste.txt
