@@ -3,10 +3,10 @@ Módulo de configuração: gerencia preferências do usuário.
 """
 
 import json
+import logging
 import os
 from pathlib import Path
-from typing import Optional, Dict, Any
-import logging
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +14,8 @@ logger = logging.getLogger(__name__)
 def _get_config_dir() -> Path:
     """Obter diretório de configuração."""
     if os.name == 'nt':  # Windows
-        config_dir = Path(os.getenv('APPDATA')) / 'ShopeeLabelPrinter'
+        appdata = os.getenv('APPDATA') or str(Path.home())
+        config_dir = Path(appdata) / 'ShopeeLabelPrinter'
     else:  # macOS/Linux
         config_dir = Path.home() / '.config' / 'shopee_label_printer'
 
@@ -26,21 +27,24 @@ class Config:
     """Gerencia configurações da aplicação."""
 
     _config_file = _get_config_dir() / 'settings.json'
-    _defaults = {
+    _defaults: dict[str, Any] = {
         'last_printer': None,
         'remember_printer': True,
         'auto_detect_thermal': True,
         'last_directory': None,
         'print_history': [],  # Lista dos últimos impressos
         'theme': 'auto',  # auto, light, dark
+        'auto_import_enabled': True,
+        'auto_import_interval_ms': 5000,
+        'auto_import_loaded_files': [],  # Rastrear arquivos já importados
     }
 
     @classmethod
-    def load(cls) -> Dict[str, Any]:
+    def load(cls) -> dict[str, Any]:
         """Carrega configurações do arquivo."""
         try:
             if cls._config_file.exists():
-                with open(cls._config_file, 'r') as f:
+                with open(cls._config_file) as f:
                     data = json.load(f)
                     # Mesclar com defaults
                     return {**cls._defaults, **data}
@@ -50,7 +54,7 @@ class Config:
         return cls._defaults.copy()
 
     @classmethod
-    def save(cls, config: Dict[str, Any]) -> None:
+    def save(cls, config: dict[str, Any]) -> None:
         """Salva configurações em arquivo."""
         try:
             with open(cls._config_file, 'w') as f:
@@ -92,7 +96,7 @@ class Config:
         cls.save(config)
 
     @classmethod
-    def get_print_stats(cls) -> Dict[str, Any]:
+    def get_print_stats(cls) -> dict[str, Any]:
         """Obtém estatísticas de impressão."""
         config = cls.load()
         history = config.get('print_history', [])

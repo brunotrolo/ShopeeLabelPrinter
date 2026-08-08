@@ -3,13 +3,12 @@ Módulo de impressão: envio RAW para impressora térmica.
 Com tratamento robusto de erros.
 """
 
-import re
-import platform
-import subprocess
 import ctypes
 import logging
+import platform
+import re
+import subprocess
 from ctypes import wintypes
-from typing import List
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +18,7 @@ if IS_WINDOWS:
     # use_last_error=True guarda o GetLastError() da chamada, que é o que
     # explica por que a impressão falhou. Sem isso, todo erro vira só
     # "não foi possível" e não dá para diagnosticar nada.
-    winspool = ctypes.WinDLL("winspool.drv", use_last_error=True)
+    winspool = ctypes.WinDLL("winspool.drv", use_last_error=True)  # type: ignore[attr-defined]
 
     class _DOC_INFO_1(ctypes.Structure):
         _fields_ = [
@@ -61,11 +60,11 @@ if IS_WINDOWS:
 
 def _windows_error(action: str) -> str:
     """Monta a mensagem com o código e o texto de erro que o Windows devolveu."""
-    code = ctypes.get_last_error()
+    code = ctypes.get_last_error()  # type: ignore[attr-defined]
     if not code:
         return action
     try:
-        detail = ctypes.WinError(code).strerror
+        detail = ctypes.WinError(code).strerror  # type: ignore[attr-defined]
     except Exception:  # noqa: BLE001
         detail = "erro desconhecido"
     return f"{action} (erro {code} do Windows: {detail})"
@@ -76,7 +75,7 @@ class PrinterError(Exception):
     pass
 
 
-def list_printers() -> List[str]:
+def list_printers() -> list[str]:
     """
     Lista as impressoras disponíveis no sistema.
 
@@ -93,7 +92,7 @@ def list_printers() -> List[str]:
         return []
 
 
-def _list_printers_windows() -> List[str]:
+def _list_printers_windows() -> list[str]:
     """Lista impressoras no Windows via PowerShell."""
     try:
         result = subprocess.run(
@@ -116,7 +115,7 @@ def _list_printers_windows() -> List[str]:
         return []
 
 
-def _list_printers_unix() -> List[str]:
+def _list_printers_unix() -> list[str]:
     """Lista impressoras no macOS/Linux via lpstat."""
     try:
         out = subprocess.run(["lpstat", "-p"], capture_output=True, text=True)
@@ -128,7 +127,9 @@ def _list_printers_unix() -> List[str]:
         return []
 
 
-def send_raw_to_printer(printer_name: str, data: bytes, job_name: str = "Etiqueta Shopee"):
+def send_raw_to_printer(
+    printer_name: str, data: bytes, job_name: str = "Etiqueta Shopee"
+) -> None:
     """
     Envia bytes crus para a impressora, sem reprocessar/reamostrar nada.
 
@@ -160,11 +161,11 @@ def send_raw_to_printer(printer_name: str, data: bytes, job_name: str = "Etiquet
         raise PrinterError(f"Erro ao enviar para impressora: {str(e)}")
 
 
-def _send_raw_windows(printer_name: str, data: bytes, job_name: str):
+def _send_raw_windows(printer_name: str, data: bytes, job_name: str) -> None:
     """Envia RAW no Windows via winspool."""
     hPrinter = wintypes.HANDLE()
 
-    ctypes.set_last_error(0)
+    ctypes.set_last_error(0)  # type: ignore[attr-defined]
     if not winspool.OpenPrinterW(printer_name, ctypes.byref(hPrinter), None):
         raise PrinterError(
             _windows_error(f"Não foi possível abrir a impressora '{printer_name}'")
@@ -175,7 +176,7 @@ def _send_raw_windows(printer_name: str, data: bytes, job_name: str):
     try:
         doc_info = _DOC_INFO_1(pDocName=job_name, pOutputFile=None, pDatatype="RAW")
 
-        ctypes.set_last_error(0)
+        ctypes.set_last_error(0)  # type: ignore[attr-defined]
         job_id = winspool.StartDocPrinterW(hPrinter, 1, ctypes.byref(doc_info))
         if job_id == 0:
             raise PrinterError(
@@ -188,14 +189,14 @@ def _send_raw_windows(printer_name: str, data: bytes, job_name: str):
         logger.info("Trabalho %s iniciado (%d bytes, modo RAW)", job_id, len(data))
 
         try:
-            ctypes.set_last_error(0)
+            ctypes.set_last_error(0)  # type: ignore[attr-defined]
             if not winspool.StartPagePrinter(hPrinter):
                 raise PrinterError(_windows_error("Falha ao iniciar a página"))
 
             written = wintypes.DWORD(0)
             buf = ctypes.create_string_buffer(data, len(data))
 
-            ctypes.set_last_error(0)
+            ctypes.set_last_error(0)  # type: ignore[attr-defined]
             ok = winspool.WritePrinter(hPrinter, buf, len(data), ctypes.byref(written))
 
             if not ok:
@@ -305,7 +306,7 @@ TEST_LABELS = {
 }
 
 
-def send_test_label(printer_name: str, language: str):
+def send_test_label(printer_name: str, language: str) -> None:
     """
     Envia uma etiqueta mínima de teste na linguagem escolhida.
 
@@ -328,7 +329,7 @@ def send_test_label(printer_name: str, language: str):
     )
 
 
-def _send_raw_unix(printer_name: str, data: bytes):
+def _send_raw_unix(printer_name: str, data: bytes) -> None:
     """Envia RAW no Unix via lp."""
     proc = subprocess.run(
         ["lp", "-d", printer_name, "-o", "raw"],

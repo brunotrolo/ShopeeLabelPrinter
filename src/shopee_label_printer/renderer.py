@@ -12,11 +12,10 @@ impressora — 203 DPI, 1 pixel da imagem = 1 ponto impresso.
 
 import base64
 import binascii
+import logging
 import re
 import zlib
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Tuple
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +60,7 @@ class Overlay:
     font_width: int = 0
     rotation: int = 0
     inverted: bool = False
-    modules: List[int] = field(default_factory=list)  # barras do Code 128
+    modules: list[int] = field(default_factory=list)  # barras do Code 128
 
 
 @dataclass
@@ -72,7 +71,7 @@ class LabelRender:
     height: int
     dpi: int = DEFAULT_DPI
     pixels: bytearray = field(default_factory=bytearray)
-    overlays: List[Overlay] = field(default_factory=list)
+    overlays: list[Overlay] = field(default_factory=list)
     has_bitmap: bool = False
 
     @property
@@ -150,7 +149,7 @@ def _decode_compressed_hex(data: str, bytes_per_row: int, total_bytes: int) -> b
     nibbles_per_row = bytes_per_row * 2
     out = bytearray()
     row = bytearray()
-    prev_row: Optional[bytes] = None
+    prev_row: bytes | None = None
     repeat = 0
 
     for char in data:
@@ -226,7 +225,7 @@ def unpack_bitmap(raw: bytes, bytes_per_row: int) -> Bitmap:
 # Tokenização do fluxo ZPL
 # ---------------------------------------------------------------------------
 
-def tokenize_zpl(text: str) -> List[Tuple[str, str]]:
+def tokenize_zpl(text: str) -> list[tuple[str, str]]:
     """
     Quebra o fluxo ZPL em (comando, parâmetros).
 
@@ -234,7 +233,7 @@ def tokenize_zpl(text: str) -> List[Tuple[str, str]]:
     vão até o próximo '^' ou '~' — exceto em ^FD, cujo conteúdo é literal e
     só termina em ^FS.
     """
-    tokens: List[Tuple[str, str]] = []
+    tokens: list[tuple[str, str]] = []
     i = 0
     n = len(text)
 
@@ -272,7 +271,7 @@ def tokenize_zpl(text: str) -> List[Tuple[str, str]]:
     return tokens
 
 
-def _int_arg(parts: List[str], index: int, default: int = 0) -> int:
+def _int_arg(parts: list[str], index: int, default: int = 0) -> int:
     if index >= len(parts):
         return default
     match = re.match(r"\s*(-?\d+)", parts[index])
@@ -298,9 +297,9 @@ def render_zpl(
     text = data.decode("latin-1") if isinstance(data, (bytes, bytearray)) else data
     tokens = tokenize_zpl(text)
 
-    stored: Dict[str, Bitmap] = {}
-    placed: List[Tuple[int, int, Bitmap]] = []
-    overlays: List[Overlay] = []
+    stored: dict[str, Bitmap] = {}
+    placed: list[tuple[int, int, Bitmap]] = []
+    overlays: list[Overlay] = []
 
     width = default_width
     height = default_height
@@ -314,7 +313,7 @@ def render_zpl(
     font_h, font_w = 20, 0
     barcode_h, barcode_w = 50, 2
     inverted = False
-    pending: Optional[Overlay] = None
+    pending: Overlay | None = None
 
     for command, params in tokens:
         parts = params.split(",")
@@ -375,22 +374,22 @@ def render_zpl(
             max_y = max(max_y, cur_y + box_h)
 
         elif command in ("^FD", "^FV"):
-            value = params
+            text_value: str = params
             if pending is not None:
-                pending.data = value
+                pending.data = text_value
                 if pending.kind == "barcode":
-                    pending.modules = encode_code128(value)
+                    pending.modules = encode_code128(text_value)
                 overlays.append(pending)
                 max_x = max(max_x, pending.x + len(pending.modules) * pending.thickness)
                 max_y = max(max_y, pending.y + pending.height)
                 pending = None
-            elif value.strip():
+            elif text_value.strip():
                 overlays.append(
                     Overlay(
                         kind="text",
                         x=cur_x,
                         y=cur_y,
-                        data=value,
+                        data=text_value,
                         font_height=font_h,
                         font_width=font_w or int(font_h * 0.6),
                         inverted=inverted,
@@ -466,7 +465,7 @@ def _normalize_graphic_name(raw: str) -> str:
     return name
 
 
-def _parse_download_graphic(params: str) -> Tuple[str, Optional[Bitmap]]:
+def _parse_download_graphic(params: str) -> tuple[str, Bitmap | None]:
     """~DGd:o.x,t,w,data"""
     parts = params.split(",", 3)
     if len(parts) < 4:
@@ -483,7 +482,7 @@ def _parse_download_graphic(params: str) -> Tuple[str, Optional[Bitmap]]:
         return name, None
 
 
-def _parse_graphic_field(params: str) -> Optional[Bitmap]:
+def _parse_graphic_field(params: str) -> Bitmap | None:
     """^GFa,b,c,d,data — 'a' é o formato (A = ASCII hex)."""
     parts = params.split(",", 4)
     if len(parts) < 5:
@@ -555,7 +554,7 @@ _CODE128_PATTERNS = [
 _CODE128_STOP = 106
 
 
-def encode_code128(value: str) -> List[int]:
+def encode_code128(value: str) -> list[int]:
     """
     Converte um texto em larguras de barras/espaços do Code 128.
 
@@ -583,7 +582,7 @@ def encode_code128(value: str) -> List[int]:
 
     sequence = [start] + codes + [checksum, _CODE128_STOP]
 
-    widths: List[int] = []
+    widths: list[int] = []
     for code in sequence:
         if 0 <= code < len(_CODE128_PATTERNS):
             widths.extend(int(c) for c in _CODE128_PATTERNS[code])
@@ -595,7 +594,7 @@ def encode_code128(value: str) -> List[int]:
 # Saída para a tela
 # ---------------------------------------------------------------------------
 
-def downsample(render: LabelRender, factor: int) -> Tuple[int, int, bytearray]:
+def downsample(render: LabelRender, factor: int) -> tuple[int, int, bytearray]:
     """
     Reduz o bitmap por média de área, devolvendo tons de cinza (0-255).
 

@@ -14,6 +14,8 @@ from tkinter import filedialog, messagebox, ttk
 from typing import Any
 
 from . import __version__
+from .config import Config
+from .converters import ConversionError, zpl_to_pdf, zpl_to_tspl
 from .logger import setup_logging
 from .parser import ParserError, load_labels_from_path
 from .printer import (
@@ -23,8 +25,7 @@ from .printer import (
     send_raw_to_printer,
     send_test_label,
 )
-from .renderer import RenderError, render_zpl, to_ppm, downsample
-from .converters import zpl_to_tspl, zpl_to_pdf, ConversionError
+from .renderer import RenderError, downsample, render_zpl, to_ppm
 
 # Níveis de zoom: rótulo -> fator de redução (1 = resolução nativa 203 DPI)
 ZOOM_LEVELS = [
@@ -66,12 +67,15 @@ class ShopeePrintApp(tk.Tk):
         self._current_index: int | None = None
         self._placeholder: str = ""
         self.log_text: tk.Text | None = None
+        self._auto_import_active: bool = False
+        self._loaded_files_hash: set[str] = set()
 
         # A UI precisa existir antes do logging: setup_logging() já emite a
         # primeira mensagem, e ela é entregue ao callback na hora.
         self._build_ui()
         self.logger = setup_logging(console_callback=self._log)
         self._refresh_printers()
+        self._schedule_auto_load()
 
     # -- construção da UI ---------------------------------------------------
     def _build_ui(self) -> None:
@@ -106,6 +110,9 @@ class ShopeePrintApp(tk.Tk):
         ttk.Button(
             import_frame, text="📂 Importar ZIP / Pasta / TXT", command=self._on_import
         ).pack(side="left")
+        ttk.Button(
+            import_frame, text="🔄 Atualizar", command=self._on_manual_refresh
+        ).pack(side="left", padx=4)
 
         self.status_label = ttk.Label(parent, text="Nenhum arquivo carregado", foreground="orange")
         self.status_label.pack(anchor="w")
@@ -481,6 +488,108 @@ class ShopeePrintApp(tk.Tk):
             self._log(f"❌ ERRO DESCONHECIDO: {e}")
             messagebox.showerror("Erro", f"Erro desconhecido: {e}")
 
+    def _get_downloads_folder(self) -> Path:
+        """Retorna caminho da pasta Downloads do usuário."""
+        return Path.home() / "Downloads"
+
+    def _auto_load_from_downloads(self) -> int:
+        """Carrega automaticamente arquivos ZPL novos da pasta Downloads.
+
+        Filtra por arquivos que começam com "Etiqueta de Envio ZPL" e detecta
+        quais já foram importados usando hash dos paths.
+
+        Returns:
+            Número de novos arquivos adicionados.
+        """
+        if not Config.get("auto_import_enabled", True):
+            return 0
+
+        downloads = self._get_downloads_folder()
+        if not downloads.exists():
+            return 0
+
+        new_count = 0
+        try:
+            # Listar arquivos ZPL/TSPL/TXT/PRN na Downloads
+            pattern_files = list(downloads.glob("Etiqueta de Envio ZPL*.*"))
+            supported_ext = {".zpl", ".tspl", ".txt", ".prn"}
+            zpl_files = [
+                f for f in pattern_files
+                if f.suffix.lower() in supported_ext and f.is_file()
+            ]
+
+            # Carregar hashes conhecidos
+            known_files = set(Config.get("auto_import_loaded_files", []))
+
+            # Detectar novos arquivos
+            new_files: list[Path] = []
+            for filepath in zpl_files:
+                file_hash = str(filepath.resolve())
+                if file_hash not in known_files:
+                    new_files.append(filepath)
+                    known_files.add(file_hash)
+
+            if not new_files:
+                return 0
+
+            # Carregar novos arquivos
+            for filepath in new_files:
+                try:
+                    new_labels = load_labels_from_path(str(filepath))
+                    # Adicionar à lista existente (sem duplicar por nome)
+                    existing_names = {name for name, _ in self.labels_loaded}
+                    for name, data in new_labels:
+                        if name not in existing_names:
+                            self.labels_loaded.append((name, data))
+                            self.listbox.insert("end", name)
+                            new_count += 1
+                            existing_names.add(name)
+                except ParserError as e:
+                    self._log(f"⚠️  Erro ao carregar {filepath.name}: {e}")
+                except Exception as e:  # noqa: BLE001
+                    self._log(f"⚠️  Erro inesperado ao carregar {filepath.name}: {e}")
+
+            # Atualizar config com novos hashes
+            Config.set("auto_import_loaded_files", sorted(list(known_files)))
+
+            # Atualizar status se foram adicionados novos
+            if new_count > 0:
+                self.status_label.config(
+                    text=f"✓ {len(self.labels_loaded)} etiqueta(s) "
+                    f"(+{new_count} nova(s))",
+                    foreground="green",
+                )
+                self._log(f"✓ Auto-import: adicionadas {new_count} etiqueta(s)")
+
+                # Selecionar a primeira nova etiqueta se nenhuma está selecionada
+                if not self.listbox.curselection():
+                    idx = max(0, len(self.labels_loaded) - new_count)
+                    self.listbox.selection_set(idx)
+                    self._on_select_label()
+
+        except Exception as e:  # noqa: BLE001
+            self._log(f"⚠️  Erro no auto-import: {e}")
+
+        return new_count
+
+    def _schedule_auto_load(self) -> None:
+        """Agenda o próximo ciclo de auto-load com polling."""
+        self._auto_import_active = True
+        self._poll_auto_load()
+
+    def _poll_auto_load(self) -> None:
+        """Executa o ciclo de polling para auto-import (não-bloqueante)."""
+        if self._auto_import_active:
+            self._auto_load_from_downloads()
+            interval = Config.get("auto_import_interval_ms", 5000)
+            self.after(interval, self._poll_auto_load)
+
+    def _on_manual_refresh(self) -> None:
+        """Callback do botão 'Atualizar' para forçar check imediato."""
+        new_count = self._auto_load_from_downloads()
+        if new_count == 0:
+            self._log("✓ Nenhum arquivo novo encontrado")
+
     def _print_indices(self, indices: list[int]) -> None:
         if not indices:
             messagebox.showwarning("Atenção", "Nenhuma etiqueta selecionada.")
@@ -633,8 +742,9 @@ class ShopeePrintApp(tk.Tk):
         )
 
     def _show_log_dir(self) -> None:
-        import subprocess
         import platform
+        import subprocess
+
         from .logger import _get_log_dir
 
         log_dir = _get_log_dir()

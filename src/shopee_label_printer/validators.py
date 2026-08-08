@@ -57,8 +57,9 @@ def validate_file_extension(filename: str) -> bool:
     Returns:
         True se extensão é suportada
     """
-    from .parser import LABEL_EXTENSIONS
     from pathlib import Path
+
+    from .parser import LABEL_EXTENSIONS
 
     ext = Path(filename).suffix.lower()
     return ext in LABEL_EXTENSIONS

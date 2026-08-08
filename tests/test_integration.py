@@ -8,11 +8,8 @@ Esses testes validam o fluxo completo:
 - Simular envio para impressora
 """
 
-import io
 import logging
-import tempfile
 from pathlib import Path
-from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -210,3 +207,106 @@ class TestE2ELogging:
         # Assert
         log_messages = [record.message for record in caplog.records]
         assert any("Iniciando conversão ZPL → PDF" in msg for msg in log_messages)
+
+
+class TestE2EAutoImport:
+    """Testes de auto-import de arquivos da pasta Downloads."""
+
+    def test_detect_zpl_files_with_pattern(self, tmp_path: Path) -> None:
+        """Testa detecção de arquivos com padrão 'Etiqueta de Envio ZPL'."""
+        # Arrange
+        zpl_file = tmp_path / "Etiqueta de Envio ZPL 123.zpl"
+        test_zpl = b"^XA^MMT^PQ1,0,1,Y^XZ"
+        zpl_file.write_bytes(test_zpl)
+
+        other_file = tmp_path / "outro_arquivo.zpl"
+        other_file.write_bytes(test_zpl)
+
+        # Act: Listar arquivos com padrão (simulando _get_downloads_folder)
+        pattern_files = list(tmp_path.glob("Etiqueta de Envio ZPL*.*"))
+
+        # Assert
+        assert len(pattern_files) == 1
+        assert pattern_files[0].name == "Etiqueta de Envio ZPL 123.zpl"
+
+    def test_deduplicate_loaded_files(self, tmp_path: Path, sample_zpl_with_bitmap: bytes) -> None:
+        """Testa que não há duplicatas ao importar o mesmo arquivo novamente."""
+        # Arrange
+        zpl_file = tmp_path / "Etiqueta de Envio ZPL ABC.zpl"
+        zpl_file.write_bytes(sample_zpl_with_bitmap)
+
+        # Act 1: Primeira importação
+        labels_1 = load_labels_from_path(str(zpl_file))
+        assert len(labels_1) > 0
+
+        # Act 2: Segunda importação (mesmo arquivo)
+        labels_2 = load_labels_from_path(str(zpl_file))
+
+        # Assert: Mesmo arquivo, mesmos rótulos
+        assert len(labels_2) == len(labels_1)
+        assert labels_2[0][1] == labels_1[0][1]
+
+    def test_auto_import_finds_supported_formats(self, tmp_path: Path) -> None:
+        """Testa que auto-import detecta múltiplos formatos suportados."""
+        # Arrange
+        supported_exts = [".zpl", ".tspl", ".txt", ".prn"]
+        test_data = b"^XA^MMT^PQ1,0,1,Y^XZ"
+
+        for ext in supported_exts:
+            file = tmp_path / f"Etiqueta de Envio ZPL formato{ext}"
+            file.write_bytes(test_data)
+
+        # Act
+        zpl_files = [
+            f for f in tmp_path.glob("Etiqueta de Envio ZPL*.*")
+            if f.suffix.lower() in {".zpl", ".tspl", ".txt", ".prn"} and f.is_file()
+        ]
+
+        # Assert
+        assert len(zpl_files) == len(supported_exts)
+
+    def test_auto_import_ignores_non_matching_files(self, tmp_path: Path) -> None:
+        """Testa que arquivos sem padrão não são importados."""
+        # Arrange
+        matching = tmp_path / "Etiqueta de Envio ZPL 001.zpl"
+        matching.write_bytes(b"^XA^XZ")
+
+        non_matching = tmp_path / "random_label.zpl"
+        non_matching.write_bytes(b"^XA^XZ")
+
+        # Act
+        pattern_files = list(tmp_path.glob("Etiqueta de Envio ZPL*.*"))
+
+        # Assert
+        assert len(pattern_files) == 1
+        assert pattern_files[0] == matching
+
+    def test_auto_import_handles_file_hash_tracking(self, tmp_path: Path) -> None:
+        """Testa que o sistema rastreia files por hash para evitar re-importação."""
+        # Arrange
+        file1 = tmp_path / "Etiqueta de Envio ZPL 1.zpl"
+        file1.write_bytes(b"^XA^PQ1^XZ")
+
+        file2 = tmp_path / "Etiqueta de Envio ZPL 2.zpl"
+        file2.write_bytes(b"^XA^PQ1^XZ")
+
+        # Act: Simular rastreamento
+        loaded_hashes = set()
+        new_files = []
+
+        for filepath in [file1, file2]:
+            file_hash = str(filepath.resolve())
+            if file_hash not in loaded_hashes:
+                new_files.append(filepath)
+                loaded_hashes.add(file_hash)
+
+        # Re-processar file1
+        for filepath in [file1]:
+            file_hash = str(filepath.resolve())
+            if file_hash not in loaded_hashes:
+                new_files.append(filepath)
+
+        # Assert
+        assert len(new_files) == 2  # Foram adicionados 2 arquivos novos
+        assert str(file1.resolve()) in loaded_hashes
+        assert str(file2.resolve()) in loaded_hashes

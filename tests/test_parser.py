@@ -2,14 +2,19 @@
 Testes para o módulo parser (extração e separação de etiquetas).
 """
 
-import pytest
 import os
 import tempfile
 import zipfile
 from pathlib import Path
+
+import pytest
+
 from src.shopee_label_printer.parser import (
-    split_labels, find_label_files, extract_zip_to_temp,
-    load_labels_from_path, ParserError
+    ParserError,
+    extract_zip_to_temp,
+    find_label_files,
+    load_labels_from_path,
+    split_labels,
 )
 
 
@@ -262,9 +267,10 @@ class TestLoadLabelsFromPath:
 
     def test_load_empty_folder(self):
         """Testa com pasta vazia."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            with pytest.raises(ParserError, match="Nenhuma etiqueta encontrada"):
-                load_labels_from_path(tmpdir)
+        with tempfile.TemporaryDirectory() as tmpdir, pytest.raises(
+            ParserError, match="Nenhuma etiqueta encontrada"
+        ):
+            load_labels_from_path(tmpdir)
 
     def test_load_multiple_labels_in_file(self):
         """Testa carregamento de múltiplas etiquetas no mesmo arquivo."""

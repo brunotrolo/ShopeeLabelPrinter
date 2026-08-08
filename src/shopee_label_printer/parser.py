@@ -3,13 +3,12 @@ Módulo de parsing: extração e separação de etiquetas.
 Com tratamento robusto de erros.
 """
 
+import logging
 import os
 import re
-import zipfile
 import tempfile
+import zipfile
 from pathlib import Path
-from typing import List, Tuple
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +47,7 @@ def extract_zip_to_temp(zip_path: str) -> str:
         raise ParserError(f"Erro ao extrair ZIP: {str(e)}")
 
 
-def find_label_files(folder: str) -> List[str]:
+def find_label_files(folder: str) -> list[str]:
     """
     Varre a pasta (recursivo) procurando arquivos de etiqueta.
 
@@ -79,7 +78,7 @@ _ZPL_BLOCK_RE = re.compile(r"\^XA.*?\^XZ", re.DOTALL)
 _PRINTABLE_RE = re.compile(r"\^(?:XG|GF|FD|FV|B[0-9A-Za-z])", re.IGNORECASE)
 
 
-def split_labels(content: str) -> List[str]:
+def split_labels(content: str) -> list[str]:
     """
     Alguns arquivos trazem mais de uma etiqueta concatenada no mesmo TXT.
     Divide o conteúdo em blocos individuais, um por etiqueta.
@@ -111,7 +110,7 @@ def split_labels(content: str) -> List[str]:
             parts = [content]
         return [p for p in parts if p.strip()]
 
-    labels: List[str] = []
+    labels: list[str] = []
     current: str | None = None
     pending = ""        # material fora de bloco (o ~DG mora aqui)
     last_end = 0
@@ -144,7 +143,7 @@ def split_labels(content: str) -> List[str]:
     return [label for label in labels if label.strip()]
 
 
-def load_labels_from_path(path: str) -> List[Tuple[str, bytes]]:
+def load_labels_from_path(path: str) -> list[tuple[str, bytes]]:
     """
     Aceita um .zip, uma pasta já extraída, ou um único arquivo .txt/.zpl.
     Retorna lista de tuplas (nome_origem, bytes_da_etiqueta).

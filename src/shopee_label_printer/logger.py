@@ -2,15 +2,16 @@
 Módulo de logging: arquivo + console.
 """
 
-import os
 import logging
-from pathlib import Path
+import os
 from datetime import datetime
+from pathlib import Path
+
 
 # Criar diretório de logs em %APPDATA%/ShopeeLabelPrinter
-def _get_log_dir():
+def _get_log_dir() -> Path:
     if os.name == 'nt':  # Windows
-        appdata = os.getenv('APPDATA')
+        appdata = os.getenv('APPDATA') or str(Path.home())
         log_dir = Path(appdata) / 'ShopeeLabelPrinter'
     else:  # macOS/Linux
         log_dir = Path.home() / '.shopee_label_printer'
@@ -19,7 +20,7 @@ def _get_log_dir():
     return log_dir
 
 
-def setup_logging(console_callback=None):
+def setup_logging(console_callback: None = None) -> logging.Logger:
     """
     Configura logging em arquivo + console.
 

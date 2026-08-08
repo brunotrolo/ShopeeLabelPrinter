@@ -8,7 +8,6 @@ import zlib
 import pytest
 
 from src.shopee_label_printer.renderer import (
-    Bitmap,
     LabelRender,
     RenderError,
     decode_graphic_data,
@@ -283,7 +282,7 @@ class TestDownsample:
         assert list(gray) == [0, 0, 0, 0]  # preto
 
     def test_white_stays_white(self):
-        width, height, gray = downsample(self._solid_render(2, 2, value=0), 1)
+        _width, _height, gray = downsample(self._solid_render(2, 2, value=0), 1)
         assert list(gray) == [255] * 4
 
     def test_area_average_produces_midtone(self):
