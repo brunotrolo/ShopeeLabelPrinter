@@ -17,7 +17,8 @@ o PDF é montado a mão, objeto por objeto, comprimindo o bitmap com zlib
 
 import logging
 import zlib
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
