@@ -13,6 +13,34 @@ e este projeto segue [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 - ⏳ Impressão de várias etiquetas de uma vez na versão web
 - ⏳ Suporte a múltiplos idiomas (i18n)
 
+## [0.5.0] - 2026-08-08
+
+### Adicionado
+- **Escolha do modo de impressão: ZPL, TSPL ou PDF**, nas duas versões. A
+  etiqueta da Shopee é ZPL, mas várias impressoras térmicas de baixo custo
+  (caso da FY-1075) só entendem TSPL de verdade — o teste de diagnóstico já
+  existente confirmou isso. Antes, trocar de impressora exigia recompilar o
+  `.exe`; agora é só trocar o seletor.
+
+  A conversão parte do mesmo bitmap que o preview usa: a etiqueta real da
+  Shopee traz o desenho inteiro embutido como imagem (`~DG`/`^GFA`), então o
+  bitmap decodificado já é a etiqueta completa. Uma etiqueta com texto/caixa/
+  código desenhados por fora do bitmap (não é o caso da Shopee) é **recusada**
+  na conversão, não aproximada — melhor negar do que imprimir algo incompleto
+  sem avisar.
+
+  - **TSPL**: usa o comando `BITMAP` (TSPL/TSPL2 Programming Manual, TSC),
+    com os dados enviados crus, não em hex — conferido byte a byte contra o
+    bitmap original antes de fechar. O reforço de impressão vira `DENSITY`/
+    `SPEED` (não dá pra reaproveitar o `^MD`/`^PR` do ZPL, que não existe em
+    TSPL).
+  - **PDF**: montado à mão, sem biblioteca nenhuma — mantém o projeto com
+    zero dependência externa e não muda o tamanho do `.exe`. No navegador,
+    usa `CompressionStream("deflate")` (nativo) para gerar o mesmo formato
+    zlib que o `/FlateDecode` do PDF espera.
+  - Web e desktop passam pelo mesmo bitmap e produzem **bytes idênticos** em
+    TSPL e PDF — conferido gerando os dois lados para a mesma etiqueta.
+
 ## [0.4.1] - 2026-08-08
 
 ### Corrigido
