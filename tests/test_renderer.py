@@ -8,7 +8,6 @@ import zlib
 import pytest
 
 from src.shopee_label_printer.renderer import (
-    Bitmap,
     LabelRender,
     RenderError,
     decode_graphic_data,

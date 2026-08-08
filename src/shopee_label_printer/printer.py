@@ -3,13 +3,12 @@ Módulo de impressão: envio RAW para impressora térmica.
 Com tratamento robusto de erros.
 """
 
-import re
-import platform
-import subprocess
 import ctypes
 import logging
+import platform
+import re
+import subprocess
 from ctypes import wintypes
-from typing import List
 
 logger = logging.getLogger(__name__)
 
@@ -76,7 +75,7 @@ class PrinterError(Exception):
     pass
 
 
-def list_printers() -> List[str]:
+def list_printers() -> list[str]:
     """
     Lista as impressoras disponíveis no sistema.
 
@@ -93,7 +92,7 @@ def list_printers() -> List[str]:
         return []
 
 
-def _list_printers_windows() -> List[str]:
+def _list_printers_windows() -> list[str]:
     """Lista impressoras no Windows via PowerShell."""
     try:
         result = subprocess.run(
@@ -116,7 +115,7 @@ def _list_printers_windows() -> List[str]:
         return []
 
 
-def _list_printers_unix() -> List[str]:
+def _list_printers_unix() -> list[str]:
     """Lista impressoras no macOS/Linux via lpstat."""
     try:
         out = subprocess.run(["lpstat", "-p"], capture_output=True, text=True)

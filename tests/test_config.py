@@ -2,11 +2,11 @@
 Testes para o módulo config.
 """
 
-import pytest
-import tempfile
 import json
+import tempfile
 from pathlib import Path
 from unittest.mock import patch
+
 from src.shopee_label_printer.config import Config
 
 
@@ -59,7 +59,7 @@ class TestConfig:
     def test_get_default(self, mock_get):
         """Testa obtenção com valor padrão."""
         mock_get.return_value = None
-        result = Config.get('nonexistent', 'default')
+        Config.get('nonexistent', 'default')
         # Aqui o mock não funciona bem, mas o código funcionaria
 
     @patch.object(Config, 'load')

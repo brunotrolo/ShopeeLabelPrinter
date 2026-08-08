@@ -2,14 +2,19 @@
 Testes para o módulo parser (extração e separação de etiquetas).
 """
 
-import pytest
 import os
 import tempfile
 import zipfile
 from pathlib import Path
+
+import pytest
+
 from src.shopee_label_printer.parser import (
-    split_labels, find_label_files, extract_zip_to_temp,
-    load_labels_from_path, ParserError
+    ParserError,
+    extract_zip_to_temp,
+    find_label_files,
+    load_labels_from_path,
+    split_labels,
 )
 
 

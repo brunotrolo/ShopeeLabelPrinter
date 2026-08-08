@@ -3,10 +3,10 @@ Módulo de configuração: gerencia preferências do usuário.
 """
 
 import json
+import logging
 import os
 from pathlib import Path
-from typing import Optional, Dict, Any
-import logging
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -39,11 +39,11 @@ class Config:
     }
 
     @classmethod
-    def load(cls) -> Dict[str, Any]:
+    def load(cls) -> dict[str, Any]:
         """Carrega configurações do arquivo."""
         try:
             if cls._config_file.exists():
-                with open(cls._config_file, 'r') as f:
+                with open(cls._config_file) as f:
                     data = json.load(f)
                     # Mesclar com defaults
                     return {**cls._defaults, **data}
@@ -53,7 +53,7 @@ class Config:
         return cls._defaults.copy()
 
     @classmethod
-    def save(cls, config: Dict[str, Any]) -> None:
+    def save(cls, config: dict[str, Any]) -> None:
         """Salva configurações em arquivo."""
         try:
             with open(cls._config_file, 'w') as f:
@@ -95,7 +95,7 @@ class Config:
         cls.save(config)
 
     @classmethod
-    def get_print_stats(cls) -> Dict[str, Any]:
+    def get_print_stats(cls) -> dict[str, Any]:
         """Obtém estatísticas de impressão."""
         config = cls.load()
         history = config.get('print_history', [])

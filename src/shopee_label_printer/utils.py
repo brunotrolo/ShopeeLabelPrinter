@@ -2,13 +2,12 @@
 Utilidades variadas.
 """
 
-from typing import List, Tuple
 import logging
 
 logger = logging.getLogger(__name__)
 
 
-def sort_printers(printer_list: List[str], prefer_thermal: bool = True) -> List[str]:
+def sort_printers(printer_list: list[str], prefer_thermal: bool = True) -> list[str]:
     """
     Ordena lista de impressoras, colocando impressoras térmicas em primeiro.
 
@@ -36,7 +35,7 @@ def sort_printers(printer_list: List[str], prefer_thermal: bool = True) -> List[
     return thermal + other
 
 
-def format_print_summary(ok: int, fail: int) -> Tuple[str, str]:
+def format_print_summary(ok: int, fail: int) -> tuple[str, str]:
     """
     Formata resumo de impressão.
 

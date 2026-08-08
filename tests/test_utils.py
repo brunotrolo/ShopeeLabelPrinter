@@ -2,10 +2,7 @@
 Testes para o módulo utils.
 """
 
-import pytest
-from src.shopee_label_printer.utils import (
-    sort_printers, format_print_summary, truncate_text
-)
+from src.shopee_label_printer.utils import format_print_summary, sort_printers, truncate_text
 
 
 class TestSortPrinters:

@@ -2,12 +2,19 @@
 Testes para o módulo printer (envio RAW para impressora).
 """
 
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock, call
+
 from src.shopee_label_printer.printer import (
-    list_printers, send_raw_to_printer, PrinterError,
-    _list_printers_windows, _list_printers_unix,
-    apply_print_boost, send_test_label, TEST_LABELS,
+    TEST_LABELS,
+    PrinterError,
+    _list_printers_unix,
+    _list_printers_windows,
+    apply_print_boost,
+    list_printers,
+    send_raw_to_printer,
+    send_test_label,
 )
 
 

@@ -2,10 +2,11 @@
 Módulo de logging: arquivo + console.
 """
 
-import os
 import logging
-from pathlib import Path
+import os
 from datetime import datetime
+from pathlib import Path
+
 
 # Criar diretório de logs em %APPDATA%/ShopeeLabelPrinter
 def _get_log_dir():

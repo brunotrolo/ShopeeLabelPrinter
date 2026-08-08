@@ -15,6 +15,7 @@ from typing import Any
 
 from . import __version__
 from .config import Config
+from .converters import ConversionError, zpl_to_pdf, zpl_to_tspl
 from .logger import setup_logging
 from .parser import ParserError, load_labels_from_path
 from .printer import (
@@ -24,8 +25,7 @@ from .printer import (
     send_raw_to_printer,
     send_test_label,
 )
-from .renderer import RenderError, render_zpl, to_ppm, downsample
-from .converters import zpl_to_tspl, zpl_to_pdf, ConversionError
+from .renderer import RenderError, downsample, render_zpl, to_ppm
 
 # Níveis de zoom: rótulo -> fator de redução (1 = resolução nativa 203 DPI)
 ZOOM_LEVELS = [
@@ -742,8 +742,9 @@ class ShopeePrintApp(tk.Tk):
         )
 
     def _show_log_dir(self) -> None:
-        import subprocess
         import platform
+        import subprocess
+
         from .logger import _get_log_dir
 
         log_dir = _get_log_dir()

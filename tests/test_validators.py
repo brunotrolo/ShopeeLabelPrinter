@@ -2,10 +2,11 @@
 Testes para o módulo validators.
 """
 
-import pytest
 from src.shopee_label_printer.validators import (
-    validate_zpl_label, validate_file_extension,
-    estimate_label_size, count_zpl_objects
+    count_zpl_objects,
+    estimate_label_size,
+    validate_file_extension,
+    validate_zpl_label,
 )
 
 

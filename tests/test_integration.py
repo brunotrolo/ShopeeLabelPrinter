@@ -8,11 +8,8 @@ Esses testes validam o fluxo completo:
 - Simular envio para impressora
 """
 
-import io
 import logging
-import tempfile
 from pathlib import Path
-from unittest.mock import MagicMock, patch
 
 import pytest
 
