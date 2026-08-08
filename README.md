@@ -3,7 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 ![Platform: Windows](https://img.shields.io/badge/Platform-Windows%2010%2B-0078d4)
-[![GitHub release](https://img.shields.io/github/release/brunotrolo/Shopee_Printer.svg)](https://github.com/brunotrolo/Shopee_Printer/releases)
+[![GitHub release](https://img.shields.io/github/release/brunotrolo/shopee-label-print.svg)](https://github.com/brunotrolo/shopee-label-print/releases)
 
 **Print Shopee shipping labels directly on your thermal printer with zero quality loss.**
 
@@ -14,10 +14,10 @@ A lightweight, zero-dependency tool to import Shopee label ZIPs, decode ZPL/TSPL
 ## ⚡ Quick Start
 
 ### 🌐 Web Version (No Installation)
-Open **[brunotrolo.github.io/Shopee_Printer](https://brunotrolo.github.io/Shopee_Printer/)**, drag your Shopee ZIP file, and preview instantly. Works in modern browsers: Chrome 80+, Edge 80+, Firefox 113+, Safari 16.4+.
+Open **[brunotrolo.github.io/Shopee_Printer](https://brunotrolo.github.io/shopee-label-print/)**, drag your Shopee ZIP file, and preview instantly. Works in modern browsers: Chrome 80+, Edge 80+, Firefox 113+, Safari 16.4+.
 
 ### 💻 Desktop Version (.exe)
-1. Download latest `ShopeeLabelPrinter.exe` from [Releases](https://github.com/brunotrolo/Shopee_Printer/releases)
+1. Download latest `ShopeeLabelPrinter.exe` from [Releases](https://github.com/brunotrolo/shopee-label-print/releases)
 2. Run the executable (no installation required)
 3. Works on any Windows 10/11 — Python not required
 
@@ -95,7 +95,7 @@ Requires Python 3.10+ with `pip install` (zero external dependencies)
 5. **Monitor**: Watch the log for any errors or warnings
 
 ### Web Version
-1. Open https://brunotrolo.github.io/Shopee_Printer/
+1. Open https://brunotrolo.github.io/shopee-label-print/
 2. Drag your ZIP file into the drop zone (or click to select)
 3. Choose print mode: **ZPL** (raw native), **TSPL** (FY-1075 compatible), or **PDF**
 4. Adjust output boost if needed (Leve/Médio/Forte/Customizado)
@@ -164,7 +164,7 @@ pytest tests/
 
 ### Build Desktop .exe
 **Option 1: Automatic (via GitHub Actions)**
-1. Go to [Actions](https://github.com/brunotrolo/Shopee_Printer/actions)
+1. Go to [Actions](https://github.com/brunotrolo/shopee-label-print/actions)
 2. Select "Build Executável" → Run workflow
 3. Download the `.exe` from the completed run
 
@@ -245,7 +245,7 @@ This is an active project. Contributions welcome:
 - Documentation improvements
 - Feature suggestions
 
-Open an issue or pull request on [GitHub](https://github.com/brunotrolo/Shopee_Printer).
+Open an issue or pull request on [GitHub](https://github.com/brunotrolo/shopee-label-print).
 
 ---
 

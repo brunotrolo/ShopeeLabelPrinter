@@ -9,10 +9,10 @@ Aplicativo profissional para imprimir etiquetas de envio da Shopee diretamente n
 ## ⚡ Início Rápido
 
 ### 🌐 Versão Web (Sem Instalação)
-Abra https://brunotrolo.github.io/Shopee_Printer/, arraste seu ZIP da Shopee e veja o preview. Funciona em: Chrome 80+, Edge 80+, Firefox 113+, Safari 16.4+.
+Abra https://brunotrolo.github.io/shopee-label-print/, arraste seu ZIP da Shopee e veja o preview. Funciona em: Chrome 80+, Edge 80+, Firefox 113+, Safari 16.4+.
 
 ### 💻 Versão Desktop (.exe)
-1. Baixe o `ShopeeLabelPrinter.exe` mais recente em [Releases](https://github.com/brunotrolo/Shopee_Printer/releases)
+1. Baixe o `ShopeeLabelPrinter.exe` mais recente em [Releases](https://github.com/brunotrolo/shopee-label-print/releases)
 2. Execute o arquivo (nenhuma instalação necessária)
 3. Funciona em Windows 10/11 — Python não é obrigatório
 
@@ -47,7 +47,7 @@ Requer Python 3.10+ (zero dependências externas)
 6. Acompanhe o log — ele avisa se alguma etiqueta falhar
 
 ### Versão Web
-1. Abra https://brunotrolo.github.io/Shopee_Printer/
+1. Abra https://brunotrolo.github.io/shopee-label-print/
 2. Arraste o ZIP para a área de soltar (ou clique para selecionar)
 3. Escolha o **Modo de Saída**: **ZPL** (nativo), **TSPL** (FY-1075 compatível) ou **PDF**
 4. Ajuste o **Reforço** se necessário (Leve/Médio/Forte/Customizado)
@@ -173,7 +173,7 @@ pytest tests/
 
 ### Gerar .exe
 **Opção 1: Automático (GitHub Actions)**
-1. Acesse [Actions](https://github.com/brunotrolo/Shopee_Printer/actions)
+1. Acesse [Actions](https://github.com/brunotrolo/shopee-label-print/actions)
 2. Selecione "Build Executável" → Run workflow
 3. Baixe o `.exe` da execução concluída
 
@@ -222,7 +222,7 @@ Contribuições bem-vindas:
 - Melhorias na documentação
 - Sugestões de features
 
-Abra uma issue ou pull request no [GitHub](https://github.com/brunotrolo/Shopee_Printer).
+Abra uma issue ou pull request no [GitHub](https://github.com/brunotrolo/shopee-label-print).
 
 ---
 
