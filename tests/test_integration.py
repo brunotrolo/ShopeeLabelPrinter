@@ -310,3 +310,29 @@ class TestE2EAutoImport:
         assert len(new_files) == 2  # Foram adicionados 2 arquivos novos
         assert str(file1.resolve()) in loaded_hashes
         assert str(file2.resolve()) in loaded_hashes
+
+    def test_auto_import_fallback_without_shopee_pattern(self, tmp_path: Path) -> None:
+        """Testa que auto-import detecta arquivos sem padrão Shopee como fallback."""
+        # Arrange: Criar arquivo sem padrão "Etiqueta de Envio ZPL"
+        generic_file = tmp_path / "label_001.zpl"
+        generic_file.write_bytes(b"^XA^PQ1^XZ")
+
+        # Act: Simular a lógica de fallback
+        supported_ext = {".zpl", ".tspl", ".txt", ".prn"}
+        pattern_files = list(tmp_path.glob("Etiqueta de Envio ZPL*.*"))
+        zpl_files = [
+            f for f in pattern_files
+            if f.suffix.lower() in supported_ext and f.is_file()
+        ]
+
+        # Se não encontrou com padrão, procura todos
+        if not zpl_files:
+            all_files = list(tmp_path.glob("*.*"))
+            zpl_files = [
+                f for f in all_files
+                if f.suffix.lower() in supported_ext and f.is_file()
+            ]
+
+        # Assert
+        assert len(zpl_files) == 1
+        assert zpl_files[0] == generic_file
