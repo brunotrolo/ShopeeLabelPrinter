@@ -10,6 +10,7 @@ from src.shopee_label_printer.converters import (
     TSPL_BOOST_LEVELS,
     ConversionError,
     _build_pdf,
+    _invert_bitmap,
     _pack_bitmap,
     zpl_to_pdf,
     zpl_to_tspl,
@@ -80,13 +81,15 @@ class TestZplToTspl:
         O manual TSPL manda os bytes crus depois da última vírgula do
         comando, não uma string hexadecimal — se fosse hex, o byte 0x80
         apareceria como os dois caracteres ASCII '8' e '0' (0x38 0x30).
+        A polaridade é invertida para TSPL (0=preto em TSPL vs 1=preto em render).
         """
         raw, bpr = diagonal_bitmap(16)
         zpl = build_dg_label(raw, bpr, 16, 16)
 
         tspl = zpl_to_tspl(zpl, render_zpl)
+        inverted_raw = _invert_bitmap(raw)
 
-        assert raw in tspl
+        assert inverted_raw in tspl
 
     def test_includes_print_command(self):
         raw, bpr = diagonal_bitmap(8)

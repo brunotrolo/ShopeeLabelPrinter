@@ -79,6 +79,17 @@ def _pack_bitmap(render) -> tuple[bytes, int, int]:
     return bytes(packed), bytes_per_row, height
 
 
+def _invert_bitmap(bitmap_bytes: bytes) -> bytes:
+    """
+    Inverte a polaridade do bitmap: XOR com 0xFF para flipping de todos os bits.
+    Necessário para TSPL (FY-1075), cuja convenção é oposta à do render.pixels.
+
+    No render: 1 = preto (black)
+    Em TSPL: 0 = preto, 1 = branco (white) — polaridade invertida
+    """
+    return bytes(b ^ 0xFF for b in bitmap_bytes)
+
+
 # Reforço de impressão em TSPL: DENSITY (0-15, padrão 8) e SPEED (pol/s).
 # Equivalente ao PRINT_BOOST_LEVELS do ZPL (^MD/^PR, em printer.py), mas na
 # escala e nos comandos que o TSPL usa — ^MD/^PR não existem em TSPL, então
@@ -99,6 +110,9 @@ def zpl_to_tspl(zpl_data: bytes, renderer_func, boost_level: str = "desligado") 
     com 1 bit = 1 ponto preto e dados enviados crus (não em hex/texto) logo
     depois da vírgula final.
 
+    Nota: TSPL usa polaridade oposta à do render (render: 1=preto, TSPL: 0=preto),
+    então o bitmap é invertido automaticamente antes do envio.
+
     Args:
         zpl_data: Bytes da etiqueta em ZPL
         renderer_func: render_zpl(data) -> LabelRender
@@ -113,6 +127,7 @@ def zpl_to_tspl(zpl_data: bytes, renderer_func, boost_level: str = "desligado") 
     try:
         render = _render_or_raise(zpl_data, renderer_func)
         bitmap_bytes, width_bytes, height_dots = _pack_bitmap(render)
+        bitmap_bytes = _invert_bitmap(bitmap_bytes)
 
         density, speed = TSPL_BOOST_LEVELS.get(boost_level, (None, None))
         boost_commands = ""

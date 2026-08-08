@@ -45,6 +45,15 @@
     return { packed, bytesPerRow, height };
   }
 
+  /** Inverte polaridade do bitmap para TSPL (XOR com 0xFF em cada byte). */
+  function invertBitmap(bitmap) {
+    const inverted = new Uint8Array(bitmap.length);
+    for (let i = 0; i < bitmap.length; i++) {
+      inverted[i] = bitmap[i] ^ 0xff;
+    }
+    return inverted;
+  }
+
   // Mesmos níveis do lado Python (converters.py TSPL_BOOST_LEVELS).
   const TSPL_BOOST_LEVELS = {
     desligado: [null, null],
@@ -56,10 +65,14 @@
   /**
    * BITMAP x,y,largura_em_bytes,altura_em_pontos,modo,<dados binários>
    * (TSPL/TSPL2 Programming Manual, TSC) — dados crus, não hex/texto.
+   *
+   * Nota: TSPL usa polaridade oposta (0=preto, 1=branco), então o bitmap
+   * é invertido automaticamente antes do envio.
    */
   async function zplToTspl(render, boostLevel) {
     rejectIfHasOverlays(render);
-    const { packed, bytesPerRow, height } = packBitmap(render);
+    let { packed, bytesPerRow, height } = packBitmap(render);
+    packed = invertBitmap(packed);
 
     const [density, speed] = TSPL_BOOST_LEVELS[boostLevel] || [null, null];
     let boostCommands = "";
