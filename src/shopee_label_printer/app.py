@@ -9,7 +9,9 @@ mas nunca os altera — o envio continua sendo RAW, byte a byte.
 import math
 import os
 import tkinter as tk
+from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
+from typing import Any
 
 from . import __version__
 from .logger import setup_logging
@@ -52,18 +54,18 @@ MODE_CHOICES = [
 
 
 class ShopeePrintApp(tk.Tk):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.title(f"Shopee Label Printer v{__version__}")
         self.geometry("1150x780")
         self.minsize(900, 600)
 
-        self.labels_loaded = []      # lista de (nome, bytes)
-        self._preview_image = None   # referência viva do PhotoImage
-        self._current_render = None
-        self._current_index = None
-        self._placeholder = ""
-        self.log_text = None
+        self.labels_loaded: list[tuple[str, bytes]] = []      # lista de (nome, bytes)
+        self._preview_image: tk.PhotoImage | None = None      # referência viva do PhotoImage
+        self._current_render: Any = None
+        self._current_index: int | None = None
+        self._placeholder: str = ""
+        self.log_text: tk.Text | None = None
 
         # A UI precisa existir antes do logging: setup_logging() já emite a
         # primeira mensagem, e ela é entregue ao callback na hora.
@@ -72,7 +74,7 @@ class ShopeePrintApp(tk.Tk):
         self._refresh_printers()
 
     # -- construção da UI ---------------------------------------------------
-    def _build_ui(self):
+    def _build_ui(self) -> None:
         header = ttk.Frame(self)
         header.pack(fill="x", padx=10, pady=(10, 4))
         ttk.Label(header, text="Shopee Label Printer", font=("Arial", 14, "bold")).pack(side="left")
@@ -96,7 +98,7 @@ class ShopeePrintApp(tk.Tk):
         self._build_controls(left)
         self._build_preview(right)
 
-    def _build_controls(self, parent):
+    def _build_controls(self, parent: tk.Widget) -> None:
         pad = {"padx": 0, "pady": 5}
 
         import_frame = ttk.Frame(parent)
@@ -179,7 +181,7 @@ class ShopeePrintApp(tk.Tk):
         self.log_text = tk.Text(parent, height=8, state="disabled", font=("Courier", 8))
         self.log_text.pack(fill="x")
 
-    def _build_preview(self, parent):
+    def _build_preview(self, parent: tk.Widget) -> None:
         frame = ttk.LabelFrame(parent, text="Preview da etiqueta", padding=8)
         frame.pack(fill="both", expand=True)
 
@@ -241,14 +243,14 @@ class ShopeePrintApp(tk.Tk):
         )
         self.canvas.configure(scrollregion=(0, 0, width, height))
 
-    def _on_canvas_resize(self, _event):
+    def _on_canvas_resize(self, _event: tk.Event) -> None:
         if self._current_render is None:
             if self._placeholder:
                 self._show_placeholder(self._placeholder)
         elif self.zoom_var.get() == ZOOM_LEVELS[0][0]:
             self._draw_preview()
 
-    def _on_select_label(self, _event=None):
+    def _on_select_label(self, _event: tk.Event | None = None) -> None:
         selection = self.listbox.curselection()
         if not selection:
             return
@@ -277,11 +279,11 @@ class ShopeePrintApp(tk.Tk):
 
         self._draw_preview()
 
-    def _on_boost_changed(self, _event=None):
+    def _on_boost_changed(self, _event: tk.Event | None = None) -> None:
         """Atualiza a UI de customizado quando o boost é alterado."""
         self._update_custom_ui()
 
-    def _update_custom_ui(self):
+    def _update_custom_ui(self) -> None:
         """Mostra/esconde UI de customizado conforme a seleção."""
         for widget in self.custom_frame.winfo_children():
             widget.destroy()
@@ -343,7 +345,7 @@ class ShopeePrintApp(tk.Tk):
         needed = max(render.width / available_w, render.height / available_h)
         return max(1, math.ceil(needed))
 
-    def _draw_preview(self):
+    def _draw_preview(self) -> None:
         render = self._current_render
         if render is None:
             return
@@ -369,7 +371,7 @@ class ShopeePrintApp(tk.Tk):
             )
         )
 
-    def _draw_overlay(self, overlay, scale: float):
+    def _draw_overlay(self, overlay: Any, scale: float) -> None:
         """Desenha os elementos vetoriais (texto, caixa, código) sobre o bitmap."""
         x = overlay.x * scale
         y = overlay.y * scale
@@ -422,7 +424,7 @@ class ShopeePrintApp(tk.Tk):
         self.log_text.see("end")
         self.log_text.config(state="disabled")
 
-    def _refresh_printers(self):
+    def _refresh_printers(self) -> None:
         self._log("Buscando impressoras...")
         printers = list_printers()
         self.printer_combo["values"] = printers
@@ -436,7 +438,7 @@ class ShopeePrintApp(tk.Tk):
         else:
             self._log("⚠️  Nenhuma impressora encontrada. Instale a impressora antes de imprimir.")
 
-    def _on_import(self):
+    def _on_import(self) -> None:
         path = filedialog.askopenfilename(
             title="Selecione o ZIP, TXT ou etiqueta",
             filetypes=[
@@ -479,7 +481,7 @@ class ShopeePrintApp(tk.Tk):
             self._log(f"❌ ERRO DESCONHECIDO: {e}")
             messagebox.showerror("Erro", f"Erro desconhecido: {e}")
 
-    def _print_indices(self, indices):
+    def _print_indices(self, indices: list[int]) -> None:
         if not indices:
             messagebox.showwarning("Atenção", "Nenhuma etiqueta selecionada.")
             self._log("⚠️  Nenhuma etiqueta selecionada")
@@ -545,7 +547,7 @@ class ShopeePrintApp(tk.Tk):
             msg += f"\n{fail} falharam"
         messagebox.showinfo("Concluído", msg)
 
-    def _save_pdf_indices(self, indices):
+    def _save_pdf_indices(self, indices: list[int]) -> None:
         """Salva etiquetas selecionadas como PDF."""
         folder = filedialog.askdirectory(title="Selecione a pasta para salvar os PDFs")
         if not folder:
@@ -576,13 +578,13 @@ class ShopeePrintApp(tk.Tk):
             msg += f"\n{fail} falharam"
         messagebox.showinfo("Concluído", msg)
 
-    def _print_selected(self):
+    def _print_selected(self) -> None:
         self._print_indices(list(self.listbox.curselection()))
 
-    def _print_all(self):
+    def _print_all(self) -> None:
         self._print_indices(list(range(len(self.labels_loaded))))
 
-    def _run_diagnostic(self):
+    def _run_diagnostic(self) -> None:
         """
         Manda uma etiqueta mínima em ZPL e outra em TSPL.
 
@@ -630,15 +632,23 @@ class ShopeePrintApp(tk.Tk):
             "não que a impressora entendeu. Quem responde isso é o papel.",
         )
 
-    def _show_log_dir(self):
+    def _show_log_dir(self) -> None:
+        import subprocess
+        import platform
         from .logger import _get_log_dir
 
         log_dir = _get_log_dir()
-        if os.name == "nt":
-            os.startfile(str(log_dir))  # noqa: S606
-        else:
-            os.system(f"open '{log_dir}'")  # noqa: S605
-        self._log(f"Abrindo: {log_dir}")
+        try:
+            if os.name == "nt":
+                os.startfile(str(log_dir))  # noqa: S606
+            elif platform.system() == "Darwin":
+                subprocess.run(["open", str(log_dir)], check=True)
+            else:
+                subprocess.run(["xdg-open", str(log_dir)], check=True)
+            self._log(f"Abrindo: {log_dir}")
+        except Exception as e:
+            self._log(f"Erro ao abrir pasta: {e}")
+            messagebox.showerror("Erro", f"Não foi possível abrir a pasta: {e}")
 
 
 def main():

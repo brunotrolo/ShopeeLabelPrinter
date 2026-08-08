@@ -1,0 +1,44 @@
+default_language_version:
+  python: python3.11
+
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.1.13
+    hooks:
+      - id: ruff
+        name: ruff format
+        entry: ruff format
+        language: python
+        language_version: python3.11
+        types: [python]
+        require_serial: false
+      - id: ruff
+        name: ruff lint
+        entry: ruff check --fix
+        language: python
+        language_version: python3.11
+        types: [python]
+        require_serial: false
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+      - id: check-merge-conflict
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.7.0
+    hooks:
+      - id: mypy
+        name: mypy type check
+        entry: mypy src/shopee_label_printer/
+        language: python
+        language_version: python3.11
+        types: [python]
+        require_serial: true
+        additional_dependencies:
+          - "types-setuptools"

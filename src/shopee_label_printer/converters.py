@@ -133,14 +133,31 @@ def zpl_to_tspl(
         ConversionError: Se não conseguir converter com segurança
     """
     try:
+        logger.info("Iniciando conversão ZPL → TSPL")
         render = _render_or_raise(zpl_data, renderer_func)
+        logger.info("Etiqueta renderizada: %.1f × %.1f mm", render.width_mm, render.height_mm)
+
         bitmap_bytes, width_bytes, height_dots = _pack_bitmap(render)
+        logger.info("Bitmap empacotado: %d bytes/linha, %d pontos altura", width_bytes, height_dots)
+
         bitmap_bytes = _invert_bitmap(bitmap_bytes)
+        logger.debug("Polaridade do bitmap invertida para TSPL")
 
         if boost_level == "customizado":
+            # Validar parâmetros customizados
+            if custom_density is not None and not (0 <= custom_density <= 15):
+                raise ConversionError(
+                    f"custom_density deve estar entre 0-15, recebido: {custom_density}"
+                )
+            if custom_speed is not None and custom_speed <= 0:
+                raise ConversionError(
+                    f"custom_speed deve ser positivo, recebido: {custom_speed}"
+                )
             density, speed = custom_density, custom_speed
+            logger.info("Usando parâmetros customizados: density=%s, speed=%s", density, speed)
         else:
             density, speed = TSPL_BOOST_LEVELS.get(boost_level, (None, None))
+            logger.info("Usando preset de reforço: %s", boost_level)
 
         boost_commands = ""
         if speed is not None:
@@ -157,11 +174,14 @@ def zpl_to_tspl(
             f"BITMAP 0,0,{width_bytes},{height_dots},0,"
         ).encode("ascii")
 
-        return header + bitmap_bytes + b"\r\nPRINT 1,1\r\n"
+        tspl_output = header + bitmap_bytes + b"\r\nPRINT 1,1\r\n"
+        logger.info("Conversão concluída: %d bytes TSPL", len(tspl_output))
+        return tspl_output
 
     except ConversionError:
         raise
     except Exception as e:
+        logger.error("Erro ao converter ZPL para TSPL: %s", str(e))
         raise ConversionError(f"Erro ao converter ZPL para TSPL: {str(e)}")
 
 
@@ -247,9 +267,14 @@ def zpl_to_pdf(zpl_data: bytes, renderer_func, output_path: str = None) -> bytes
         ConversionError: Se não conseguir converter com segurança
     """
     try:
+        logger.info("Iniciando conversão ZPL → PDF")
         render = _render_or_raise(zpl_data, renderer_func)
-        packed_bits, _width_bytes, _height = _pack_bitmap(render)
+        logger.info("Etiqueta renderizada: %.1f × %.1f mm", render.width_mm, render.height_mm)
 
+        packed_bits, _width_bytes, _height = _pack_bitmap(render)
+        logger.debug("Bitmap empacotado para PDF")
+
+        logger.info("Montando estrutura PDF")
         pdf_bytes = _build_pdf(
             render.width_mm, render.height_mm, render.width, render.height, packed_bits
         )
@@ -257,11 +282,14 @@ def zpl_to_pdf(zpl_data: bytes, renderer_func, output_path: str = None) -> bytes
         if output_path:
             with open(output_path, "wb") as f:
                 f.write(pdf_bytes)
-            logger.info(f"PDF salvo em: {output_path}")
+            logger.info("PDF salvo em: %s (%d bytes)", output_path, len(pdf_bytes))
+        else:
+            logger.info("PDF gerado: %d bytes", len(pdf_bytes))
 
         return pdf_bytes
 
     except ConversionError:
         raise
     except Exception as e:
+        logger.error("Erro ao converter ZPL para PDF: %s", str(e))
         raise ConversionError(f"Erro ao converter ZPL para PDF: {str(e)}")
