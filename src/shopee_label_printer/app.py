@@ -14,7 +14,13 @@ from tkinter import filedialog, messagebox, ttk
 from . import __version__
 from .logger import setup_logging
 from .parser import ParserError, load_labels_from_path
-from .printer import PrinterError, list_printers, send_raw_to_printer
+from .printer import (
+    PrinterError,
+    apply_print_boost,
+    list_printers,
+    send_raw_to_printer,
+    send_test_label,
+)
 from .renderer import RenderError, render_zpl, to_ppm, downsample
 
 # Níveis de zoom: rótulo -> fator de redução (1 = resolução nativa 203 DPI)
@@ -24,6 +30,15 @@ ZOOM_LEVELS = [
     ("50%", 2),
     ("33%", 3),
     ("25%", 4),
+]
+
+# Reforço de impressão: mais calor e menos velocidade, para traço fino sair
+# cheio. Só age quando o usuário escolhe — o padrão envia os bytes intactos.
+BOOST_CHOICES = [
+    ("Desligado (bytes originais)", "desligado"),
+    ("Leve — traço mais firme", "leve"),
+    ("Médio — traço bem escuro", "medio"),
+    ("Forte — pode borrar o código", "forte"),
 ]
 
 
@@ -87,14 +102,31 @@ class ShopeePrintApp(tk.Tk):
         printer_frame = ttk.LabelFrame(parent, text="Impressora", padding=8)
         printer_frame.pack(fill="x", **pad)
 
+        # Duas linhas empilhadas: cada uma num frame próprio, senão o pack
+        # horizontal da primeira briga com o vertical da segunda.
+        printer_row = ttk.Frame(printer_frame)
+        printer_row.pack(fill="x")
+
         self.printer_var = tk.StringVar()
         self.printer_combo = ttk.Combobox(
-            printer_frame, textvariable=self.printer_var, state="readonly", width=34
+            printer_row, textvariable=self.printer_var, state="readonly", width=32
         )
         self.printer_combo.pack(side="left")
-        ttk.Button(printer_frame, text="🔄", width=3, command=self._refresh_printers).pack(
+        ttk.Button(printer_row, text="🔄", width=3, command=self._refresh_printers).pack(
             side="left", padx=4
         )
+
+        boost_row = ttk.Frame(printer_frame)
+        boost_row.pack(fill="x", pady=(8, 0))
+        ttk.Label(boost_row, text="Reforço:").pack(side="left")
+        self.boost_var = tk.StringVar(value=BOOST_CHOICES[0][0])
+        ttk.Combobox(
+            boost_row,
+            textvariable=self.boost_var,
+            state="readonly",
+            width=26,
+            values=[label for label, _ in BOOST_CHOICES],
+        ).pack(side="left", padx=6)
 
         list_frame = ttk.LabelFrame(parent, text="Etiquetas encontradas", padding=8)
         list_frame.pack(fill="both", expand=True, **pad)
@@ -113,7 +145,8 @@ class ShopeePrintApp(tk.Tk):
             side="left"
         )
         ttk.Button(action_frame, text="🖨️ Todas", command=self._print_all).pack(side="left", padx=4)
-        ttk.Button(action_frame, text="ℹ️ Logs", command=self._show_log_dir).pack(side="left")
+        ttk.Button(action_frame, text="🔧 Testar", command=self._run_diagnostic).pack(side="left")
+        ttk.Button(action_frame, text="ℹ️ Logs", command=self._show_log_dir).pack(side="left", padx=4)
 
         ttk.Label(parent, text="Log:", font=("Arial", 9, "bold")).pack(anchor="w", pady=(6, 0))
         self.log_text = tk.Text(parent, height=8, state="disabled", font=("Courier", 8))
@@ -371,11 +404,15 @@ class ShopeePrintApp(tk.Tk):
             self._log("⚠️  Nenhuma etiqueta selecionada")
             return
 
+        boost = dict(BOOST_CHOICES)[self.boost_var.get()]
+        if boost != "desligado":
+            self._log(f"⚙️  Reforço de impressão: {boost} (altera os bytes enviados)")
+
         ok, fail = 0, 0
         for i in indices:
             name, data = self.labels_loaded[i]
             try:
-                send_raw_to_printer(printer, data, job_name=name)
+                send_raw_to_printer(printer, apply_print_boost(data, boost), job_name=name)
                 self._log(f"✓ {name}")
                 ok += 1
             except PrinterError as e:
@@ -395,6 +432,54 @@ class ShopeePrintApp(tk.Tk):
 
     def _print_all(self):
         self._print_indices(list(range(len(self.labels_loaded))))
+
+    def _run_diagnostic(self):
+        """
+        Manda uma etiqueta mínima em ZPL e outra em TSPL.
+
+        Serve para o caso "não sai nada e nenhum erro aparece": a etiqueta da
+        Shopee é ZPL, e uma impressora em modo TSPL ignora ZPL caladamente.
+        Ver qual das duas sai no papel identifica a linguagem.
+        """
+        printer = self.printer_var.get()
+        if not printer:
+            messagebox.showwarning("Atenção", "Selecione uma impressora antes de testar.")
+            return
+
+        if not messagebox.askokcancel(
+            "Teste de impressão",
+            "Vão sair DUAS etiquetas de teste:\n\n"
+            "   1ª — TESTE ZPL\n"
+            "   2ª — TESTE TSPL\n\n"
+            "Veja qual delas imprimiu:\n\n"
+            "• Só a ZPL saiu → a impressora fala ZPL, que é a linguagem da\n"
+            "   etiqueta da Shopee. Deveria funcionar.\n"
+            "• Só a TSPL saiu → é por isso que a etiqueta da Shopee não sai.\n"
+            "• Nenhuma saiu → o problema é o driver não repassar dados RAW.\n\n"
+            "Deixe papel na impressora e clique em OK.",
+        ):
+            return
+
+        results = []
+        for language in ("ZPL", "TSPL"):
+            try:
+                send_test_label(printer, language)
+                self._log(f"✓ Teste {language} enviado")
+                results.append(f"✓ {language}: enviado sem erro")
+            except PrinterError as exc:
+                self._log(f"❌ Teste {language}: {exc}")
+                results.append(f"❌ {language}: {exc}")
+            except Exception as exc:  # noqa: BLE001
+                self._log(f"❌ Teste {language}: {exc}")
+                results.append(f"❌ {language}: {exc}")
+
+        messagebox.showinfo(
+            "Resultado do teste",
+            "\n\n".join(results)
+            + "\n\nAgora veja o que saiu no papel.\n\n"
+            "'Enviado sem erro' quer dizer que o Windows aceitou os bytes — "
+            "não que a impressora entendeu. Quem responde isso é o papel.",
+        )
 
     def _show_log_dir(self):
         from .logger import _get_log_dir

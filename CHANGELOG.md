@@ -13,6 +13,36 @@ e este projeto segue [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 - ⏳ Impressão de várias etiquetas de uma vez na versão web
 - ⏳ Suporte a múltiplos idiomas (i18n)
 
+## [0.4.0] - 2026-08-08
+
+### Corrigido
+- **Envio RAW no Windows sem `argtypes`/`restype`**: sem declarar os tipos, o
+  ctypes trata ponteiros e handles como inteiros de 32 bits. No Windows 64 bits
+  o handle da impressora era truncado, e as chamadas seguintes podiam falhar ou
+  escrever em endereço errado. Todas as funções do `winspool` agora têm tipos
+  declarados.
+- **Falhas de impressão não diziam o motivo**: a `WinDLL` passa a ser aberta com
+  `use_last_error=True` e as mensagens trazem o código e o texto de erro do
+  Windows. Antes, qualquer problema virava "não foi possível" — sem diagnóstico.
+- **Envio parcial passava como sucesso**: gravar menos bytes que o total só
+  gerava um aviso no log e o programa dizia que imprimiu. A etiqueta chegaria
+  cortada na impressora e o usuário só descobriria olhando o papel. Agora é erro.
+
+### Adicionado
+- **Botão "Testar"**: envia uma etiqueta mínima em ZPL e outra em TSPL. Serve
+  para o caso "não sai nada e nenhum erro aparece" — a etiqueta da Shopee é ZPL,
+  e uma impressora em modo TSPL ignora comandos ZPL caladamente. Ver qual das
+  duas sai no papel identifica a linguagem.
+- **Reforço de impressão** (`^MD` escurecimento + `^PR` velocidade), em quatro
+  níveis, para traço fino sair cheio. Desligado por padrão.
+
+  É a única função do projeto que altera os bytes enviados, e só age quando o
+  usuário escolhe. Mesmo assim **não mexe no desenho**: `^MD` e `^PR` controlam
+  o calor da cabeça térmica e a velocidade do papel, não o conteúdo — nenhum
+  ponto é acrescentado ou movido. Engrossar o bitmap alargaria também as barras
+  do código de barras e mudaria a proporção barra/espaço, que é justamente o que
+  o leitor mede; por isso se mexe no calor, nunca na geometria.
+
 ## [0.3.1] - 2026-08-08
 
 ### Corrigido
