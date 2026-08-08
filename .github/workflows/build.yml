@@ -74,7 +74,7 @@ jobs:
       # é a tag. No workflow_dispatch não há tag, e o passo é pulado.
       - name: Create Release
         if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: dist/ShopeeLabelPrinter.exe
           draft: false
