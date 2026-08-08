@@ -1,9 +1,17 @@
 name: Build Executável
 
 on:
+  # Publica uma Release quando uma tag v* é enviada (ex: v1.0.0)
   push:
     tags:
       - 'v*'
+  # Permite gerar o .exe pelo botão "Run workflow" na aba Actions,
+  # sem precisar criar tag nem usar o terminal.
+  workflow_dispatch:
+
+# Necessário para o passo de Release conseguir publicar o .exe.
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -24,30 +32,43 @@ jobs:
 
       - name: Build executável
         run: |
-          $args = @("--onefile", "--windowed", "--name", "ShopeeLabelPrinter")
+          # run_app.py (e não __main__.py): o PyInstaller roda o arquivo de
+          # entrada como script solto, e o __main__.py usa import relativo.
+          # --paths src deixa o analisador achar o pacote shopee_label_printer.
+          $args = @("--onefile", "--windowed", "--name", "ShopeeLabelPrinter", "--paths", "src")
           if (Test-Path "src/shopee_label_printer/assets/icon.ico") {
             $args += @("--icon=src/shopee_label_printer/assets/icon.ico")
           }
           if (Test-Path "file_version_info.txt") {
             $args += @("--version-file=file_version_info.txt")
           }
-          $args += "src/shopee_label_printer/__main__.py"
+          $args += "run_app.py"
           pyinstaller @args
 
       - name: Test executável
         run: |
           if (Test-Path "dist/ShopeeLabelPrinter.exe") {
-            Write-Host "✓ Executável criado com sucesso"
+            $size = [math]::Round((Get-Item "dist/ShopeeLabelPrinter.exe").Length / 1MB, 1)
+            Write-Host "✓ Executável criado com sucesso ($size MB)"
           } else {
             throw "Executável não foi criado"
           }
 
+      # Sempre anexa o .exe à execução, para poder baixar direto da aba
+      # Actions mesmo quando não há tag/Release.
+      - name: Anexar .exe à execução
+        uses: actions/upload-artifact@v4
+        with:
+          name: ShopeeLabelPrinter-exe
+          path: dist/ShopeeLabelPrinter.exe
+          retention-days: 90
+
+      # Só cria Release quando foi disparado por uma tag.
       - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
           files: dist/ShopeeLabelPrinter.exe
           draft: false
           prerelease: false
           generate_release_notes: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

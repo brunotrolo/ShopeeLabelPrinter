@@ -38,6 +38,7 @@ class ShopeePrintApp(tk.Tk):
         self._preview_image = None   # referência viva do PhotoImage
         self._current_render = None
         self._current_index = None
+        self._placeholder = ""
         self.log_text = None
 
         # A UI precisa existir antes do logging: setup_logging() já emite a
@@ -159,15 +160,32 @@ class ShopeePrintApp(tk.Tk):
     def _show_placeholder(self, message: str):
         self.canvas.delete("all")
         self._preview_image = None
-        width = max(self.canvas.winfo_width(), 200)
-        height = max(self.canvas.winfo_height(), 200)
+        self._placeholder = message
+
+        # winfo_width() ainda devolve 1 antes do primeiro layout, o que jogava
+        # o texto para fora da área visível. Nesse caso espera o <Configure>,
+        # que redesenha com o tamanho real.
+        width = self.canvas.winfo_width()
+        height = self.canvas.winfo_height()
+        if width <= 1 or height <= 1:
+            return
+
         self.canvas.create_text(
-            width // 2, height // 2, text=message, fill="#868e96", font=("Arial", 11)
+            width // 2,
+            height // 2,
+            text=message,
+            fill="#868e96",
+            font=("Arial", 11),
+            width=width - 40,
+            justify="center",
         )
         self.canvas.configure(scrollregion=(0, 0, width, height))
 
     def _on_canvas_resize(self, _event):
-        if self._current_render is not None and self.zoom_var.get() == ZOOM_LEVELS[0][0]:
+        if self._current_render is None:
+            if self._placeholder:
+                self._show_placeholder(self._placeholder)
+        elif self.zoom_var.get() == ZOOM_LEVELS[0][0]:
             self._draw_preview()
 
     def _on_select_label(self, _event=None):

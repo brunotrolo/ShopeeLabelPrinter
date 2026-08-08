@@ -50,6 +50,41 @@ Abra **[brunotrolo.github.io/Shopee_Printer](https://brunotrolo.github.io/Shopee
 2. Dê duplo clique no `.exe` — nenhuma instalação necessária
 3. Funciona em qualquer Windows 10/11, com ou sem Python instalado
 
+> ⚠️ **Ainda não há nenhuma Release publicada.** O `.exe` é gerado pelo GitHub
+> Actions — veja [como gerar](#-como-gerar-o-exe) logo abaixo. É de graça e não
+> precisa instalar nada no seu computador.
+
+## 🏗️ Como gerar o .exe
+
+O `.exe` é compilado pelo GitHub, num Windows de verdade — você não precisa ter
+o PyInstaller nem o Python instalados. Há dois jeitos.
+
+### Jeito 1: pelo site, só clicando (mais fácil)
+
+Serve para testar. O arquivo fica guardado por 90 dias na página da execução.
+
+1. Vá em **[Actions](https://github.com/brunotrolo/Shopee_Printer/actions)**
+2. Na coluna da esquerda, clique em **Build Executável**
+3. À direita, clique em **Run workflow** → escolha `main` → **Run workflow**
+4. Espere uns 3–5 minutos (a bolinha fica verde ✓)
+5. Clique na execução e baixe **ShopeeLabelPrinter-exe**, no rodapé da página
+6. É um `.zip` — descompacte e o `.exe` está dentro
+
+### Jeito 2: publicar uma Release (o link permanente)
+
+É isto que faz o botão "Baixar" do site funcionar e cria o link
+`releases/latest/download/ShopeeLabelPrinter.exe`.
+
+1. Vá em **[Releases](https://github.com/brunotrolo/Shopee_Printer/releases)** → **Create a new release**
+2. Em **Choose a tag**, digite `v1.0.0` e clique em **Create new tag: v1.0.0 on publish**
+3. Em **Release title**, escreva `v1.0.0`
+4. Clique em **Publish release**
+5. Isso dispara o build sozinho; em uns minutos o `.exe` aparece anexado à Release
+
+> **Windows vai avisar "editor desconhecido"** na primeira execução — é esperado,
+> porque o `.exe` não tem assinatura digital paga. Clique em
+> **Mais informações → Executar assim mesmo**.
+
 ### Opção C: Rodar com Python instalado
 
 1. Instale Python 3.10+: https://www.python.org/downloads/
