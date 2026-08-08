@@ -318,21 +318,38 @@ class TestE2EAutoImport:
         generic_file.write_bytes(b"^XA^PQ1^XZ")
 
         # Act: Simular a lógica de fallback
-        supported_ext = {".zpl", ".tspl", ".txt", ".prn"}
-        pattern_files = list(tmp_path.glob("Etiqueta de Envio ZPL*.*"))
-        zpl_files = [
-            f for f in pattern_files
+        supported_ext = {".zpl", ".tspl", ".txt", ".prn", ".zip"}
+        all_files = list(tmp_path.glob("*.*"))
+        candidate_files = [
+            f for f in all_files
             if f.suffix.lower() in supported_ext and f.is_file()
         ]
 
-        # Se não encontrou com padrão, procura todos
-        if not zpl_files:
-            all_files = list(tmp_path.glob("*.*"))
-            zpl_files = [
-                f for f in all_files
-                if f.suffix.lower() in supported_ext and f.is_file()
-            ]
-
         # Assert
-        assert len(zpl_files) == 1
-        assert zpl_files[0] == generic_file
+        assert len(candidate_files) == 1
+        assert candidate_files[0] == generic_file
+
+    def test_auto_import_detects_zip_files(self, tmp_path: Path, sample_zpl_with_bitmap: bytes) -> None:
+        """Testa que auto-import detecta arquivos .zip da Shopee."""
+        # Arrange: Criar um arquivo ZPL dentro de um ZIP
+        import zipfile
+        zpl_file = tmp_path / "etiqueta.zpl"
+        zpl_file.write_bytes(sample_zpl_with_bitmap)
+
+        zip_file = tmp_path / "Etiqueta de Envio ZPL.zip"
+        with zipfile.ZipFile(zip_file, "w") as zf:
+            zf.write(zpl_file, arcname="etiqueta.zpl")
+
+        # Act: Simular a detecção no auto-import
+        supported_ext = {".zpl", ".tspl", ".txt", ".prn", ".zip"}
+        all_files = list(tmp_path.glob("*.*"))
+        candidate_files = [
+            f for f in all_files
+            if f.suffix.lower() in supported_ext and f.is_file()
+        ]
+
+        # Assert: O .zip deve ser detectado
+        assert len(candidate_files) >= 1
+        zip_candidates = [f for f in candidate_files if f.suffix.lower() == ".zip"]
+        assert len(zip_candidates) == 1
+        assert zip_candidates[0] == zip_file
