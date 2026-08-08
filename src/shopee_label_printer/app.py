@@ -22,6 +22,7 @@ from .printer import (
     send_test_label,
 )
 from .renderer import RenderError, render_zpl, to_ppm, downsample
+from .converters import zpl_to_tspl, zpl_to_pdf, ConversionError
 
 # Níveis de zoom: rótulo -> fator de redução (1 = resolução nativa 203 DPI)
 ZOOM_LEVELS = [
@@ -39,6 +40,13 @@ BOOST_CHOICES = [
     ("Leve — traço mais firme", "leve"),
     ("Médio — traço bem escuro", "medio"),
     ("Forte — pode borrar o código", "forte"),
+]
+
+# Modos de saída: permite escolher entre ZPL nativo, TSPL (para FY-1075) ou PDF
+MODE_CHOICES = [
+    ("ZPL (Zebra nativo)", "zpl"),
+    ("TSPL (FY-1075, compatível)", "tspl"),
+    ("PDF (arquivo)", "pdf"),
 ]
 
 
@@ -126,6 +134,18 @@ class ShopeePrintApp(tk.Tk):
             state="readonly",
             width=26,
             values=[label for label, _ in BOOST_CHOICES],
+        ).pack(side="left", padx=6)
+
+        mode_row = ttk.Frame(printer_frame)
+        mode_row.pack(fill="x", pady=(8, 0))
+        ttk.Label(mode_row, text="Modo:").pack(side="left")
+        self.mode_var = tk.StringVar(value=MODE_CHOICES[0][0])
+        ttk.Combobox(
+            mode_row,
+            textvariable=self.mode_var,
+            state="readonly",
+            width=26,
+            values=[label for label, _ in MODE_CHOICES],
         ).pack(side="left", padx=6)
 
         list_frame = ttk.LabelFrame(parent, text="Etiquetas encontradas", padding=8)
@@ -394,27 +414,51 @@ class ShopeePrintApp(tk.Tk):
             messagebox.showerror("Erro", f"Erro desconhecido: {e}")
 
     def _print_indices(self, indices):
-        printer = self.printer_var.get()
-        if not printer:
-            messagebox.showwarning("Atenção", "Selecione uma impressora antes de imprimir.")
-            self._log("⚠️  Impressora não selecionada")
-            return
         if not indices:
             messagebox.showwarning("Atenção", "Nenhuma etiqueta selecionada.")
             self._log("⚠️  Nenhuma etiqueta selecionada")
             return
 
+        mode = dict(MODE_CHOICES)[self.mode_var.get()]
         boost = dict(BOOST_CHOICES)[self.boost_var.get()]
+
+        # Modo PDF salva em arquivo, não imprime — reforço não se aplica a
+        # um arquivo estático.
+        if mode == "pdf":
+            return self._save_pdf_indices(indices)
+
+        # Modos ZPL e TSPL precisam de impressora
+        printer = self.printer_var.get()
+        if not printer:
+            messagebox.showwarning("Atenção", "Selecione uma impressora antes de imprimir.")
+            self._log("⚠️  Impressora não selecionada")
+            return
+
         if boost != "desligado":
             self._log(f"⚙️  Reforço de impressão: {boost} (altera os bytes enviados)")
+
+        if mode != "zpl":
+            self._log(f"⚙️  Modo de impressão: {mode.upper()}")
 
         ok, fail = 0, 0
         for i in indices:
             name, data = self.labels_loaded[i]
             try:
-                send_raw_to_printer(printer, apply_print_boost(data, boost), job_name=name)
+                # Converte para o modo selecionado. ^MD/^PR (apply_print_boost)
+                # só existem em ZPL, por isso o reforço do TSPL entra dentro da
+                # própria conversão, como DENSITY/SPEED.
+                if mode == "tspl":
+                    data = zpl_to_tspl(data, render_zpl, boost_level=boost)
+                    name = name.replace(".txt", ".tspl").replace(".zpl", ".tspl")
+                elif boost != "desligado":
+                    data = apply_print_boost(data, boost)
+
+                send_raw_to_printer(printer, data, job_name=name)
                 self._log(f"✓ {name}")
                 ok += 1
+            except ConversionError as e:
+                self._log(f"❌ {name}: {e}")
+                fail += 1
             except PrinterError as e:
                 self._log(f"❌ {name}: {e}")
                 fail += 1
@@ -423,6 +467,37 @@ class ShopeePrintApp(tk.Tk):
                 fail += 1
 
         msg = f"{ok} etiqueta(s) enviada(s) com sucesso"
+        if fail:
+            msg += f"\n{fail} falharam"
+        messagebox.showinfo("Concluído", msg)
+
+    def _save_pdf_indices(self, indices):
+        """Salva etiquetas selecionadas como PDF."""
+        folder = filedialog.askdirectory(title="Selecione a pasta para salvar os PDFs")
+        if not folder:
+            return
+
+        ok, fail = 0, 0
+        for i in indices:
+            name, data = self.labels_loaded[i]
+            try:
+                pdf_path = os.path.join(folder, name.replace(".txt", ".pdf").replace(".zpl", ".pdf"))
+
+                pdf_bytes = zpl_to_pdf(data, render_zpl)
+
+                with open(pdf_path, "wb") as f:
+                    f.write(pdf_bytes)
+
+                self._log(f"✓ {name} → {os.path.basename(pdf_path)}")
+                ok += 1
+            except ConversionError as e:
+                self._log(f"❌ {name}: {e}")
+                fail += 1
+            except Exception as e:  # noqa: BLE001
+                self._log(f"❌ {name}: {e}")
+                fail += 1
+
+        msg = f"{ok} PDF(s) salvo(s) com sucesso em:\n{folder}"
         if fail:
             msg += f"\n{fail} falharam"
         messagebox.showinfo("Concluído", msg)

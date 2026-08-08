@@ -59,10 +59,13 @@
 
         <button class="btn" id="btn-print" disabled>🖨️ Imprimir</button>
         <button class="btn" id="btn-png" disabled>🖼️ Baixar PNG</button>
-        <button class="btn" id="btn-zpl" disabled>📄 Baixar ZPL</button>
 
-        <label for="boost" style="font-size:.85rem;">Reforço do ZPL</label>
-        <select id="boost" title="Só afeta o arquivo ZPL baixado, não a impressão pelo navegador"></select>
+        <label for="mode" style="font-size:.85rem;">Modo de saída</label>
+        <select id="mode"></select>
+        <button class="btn" id="btn-download" disabled>📄 Baixar ZPL</button>
+
+        <label for="boost" style="font-size:.85rem;">Reforço</label>
+        <select id="boost" title="Só afeta o arquivo baixado (ZPL ou TSPL), não a impressão pelo navegador"></select>
 
         <span class="preview-meta" id="preview-meta"></span>
       </div>
@@ -91,11 +94,17 @@
         <em>darkness</em>. Nesse caminho a impressora recebe uma imagem, e comando ZPL
         nenhum chega até ela.
         <br><br>
-        O seletor <strong>Reforço do ZPL</strong> acima vale só para o arquivo que você
-        <em>baixa</em> — ele acrescenta <code>^MD</code> (calor) e <code>^PR</code>
-        (velocidade) para quem for imprimir esse arquivo pela versão desktop. Se o código
-        de barras parar de ser lido pelo celular, baixe um nível: calor demais faz as
-        barras engordarem e colarem.
+        O seletor <strong>Modo de saída</strong> acima escolhe o formato do arquivo baixado:
+        <strong>ZPL</strong> (nativo, para impressoras Zebra ou já em modo ZPL),
+        <strong>TSPL</strong> (para a FY-1075 e outras que só entendem TSPL — descubra qual é
+        a sua com o botão <em>🔧 Testar</em> da versão desktop) ou <strong>PDF</strong>
+        (para guardar ou imprimir por outro caminho). Os três vêm do mesmo bitmap do preview.
+        <br><br>
+        O <strong>Reforço</strong> vale só para o arquivo baixado em ZPL ou TSPL — ele
+        acrescenta comandos de calor e velocidade (<code>^MD</code>/<code>^PR</code> em ZPL,
+        <code>DENSITY</code>/<code>SPEED</code> em TSPL) para quem for imprimir esse arquivo
+        pela versão desktop. Se o código de barras parar de ser lido pelo celular, baixe um
+        nível: calor demais faz as barras engordarem e colarem. Não se aplica ao PDF.
       </div>
     </section>
   </div>
@@ -125,7 +134,8 @@
           <tr><td><strong>Envio RAW (resolução máxima)</strong></td><td class="yes">✓ Sim</td><td class="no">✗ O navegador não permite</td></tr>
           <tr><td>Impressão via driver do sistema</td><td class="no">— não usa</td><td class="yes">✓ Sim, em 100 × 150 mm</td></tr>
           <tr><td>Imprimir várias de uma vez</td><td class="yes">✓ Sim</td><td class="no">✗ Uma por vez</td></tr>
-          <tr><td>Exportar PNG / ZPL</td><td class="no">—</td><td class="yes">✓ Sim</td></tr>
+          <tr><td>Escolher modo: ZPL / TSPL / PDF</td><td class="yes">✓ Sim</td><td class="yes">✓ Sim</td></tr>
+          <tr><td>Exportar PNG</td><td class="no">—</td><td class="yes">✓ Sim</td></tr>
           <tr><td>Instalação</td><td>Baixar o .exe</td><td class="yes">✓ Nenhuma</td></tr>
           <tr><td>Funciona no celular / Mac / Linux</td><td class="no">✗ Windows</td><td class="yes">✓ Qualquer navegador</td></tr>
           <tr><td>Dados ficam no seu computador</td><td class="yes">✓ Sim</td><td class="yes">✓ Sim</td></tr>
@@ -171,6 +181,7 @@
 
 <script src="zip.js"></script>
 <script src="zpl.js"></script>
+<script src="converters.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

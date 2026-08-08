@@ -25,6 +25,13 @@
     { label: "Forte", value: "forte" },
   ];
 
+  // Modos de saída — igual ao desktop
+  const MODE_CHOICES = [
+    { label: "ZPL (Zebra nativo)", value: "zpl" },
+    { label: "TSPL (FY-1075, compatível)", value: "tspl" },
+    { label: "PDF (arquivo)", value: "pdf" },
+  ];
+
   const els = {};
   let labels = [];
   let currentIndex = -1;
@@ -38,8 +45,8 @@
     [
       "dropzone", "file-input", "status", "label-list", "label-panel",
       "preview-canvas", "preview-stage", "preview-empty", "preview-meta",
-      "zoom", "btn-print", "btn-png", "btn-zpl", "print-area", "print-size",
-      "label-count", "boost",
+      "zoom", "btn-print", "btn-png", "btn-download", "print-area", "print-size",
+      "label-count", "boost", "mode",
     ].forEach((id) => {
       els[id.replace(/-(\w)/g, (_, c) => c.toUpperCase())] = $(id);
     });
@@ -56,6 +63,13 @@
       option.value = choice.value;
       option.textContent = choice.label;
       els.boost.appendChild(option);
+    });
+
+    MODE_CHOICES.forEach((choice) => {
+      const option = document.createElement("option");
+      option.value = choice.value;
+      option.textContent = choice.label;
+      els.mode.appendChild(option);
     });
 
     els.dropzone.addEventListener("click", () => els.fileInput.click());
@@ -89,7 +103,9 @@
     els.zoom.addEventListener("change", applyZoom);
     els.btnPrint.addEventListener("click", printLabel);
     els.btnPng.addEventListener("click", downloadPng);
-    els.btnZpl.addEventListener("click", downloadZpl);
+    els.btnDownload.addEventListener("click", downloadInSelectedMode);
+    els.mode.addEventListener("change", updateDownloadButtonLabel);
+    updateDownloadButtonLabel();
 
     window.addEventListener("resize", () => {
       if (currentRender && els.zoom.value === "fit") applyZoom();
@@ -114,7 +130,12 @@
   function setActionsEnabled(enabled) {
     els.btnPrint.disabled = !enabled;
     els.btnPng.disabled = !enabled;
-    els.btnZpl.disabled = !enabled;
+    els.btnDownload.disabled = !enabled;
+  }
+
+  function updateDownloadButtonLabel() {
+    const labels = { zpl: "📄 Baixar ZPL", tspl: "📄 Baixar TSPL", pdf: "📄 Baixar PDF" };
+    els.btnDownload.textContent = labels[els.mode.value] || labels.zpl;
   }
 
   // -- importação ----------------------------------------------------------
@@ -185,8 +206,9 @@
           escapeHtml(err.message || String(err)) +
           "</small>"
       );
-      // O arquivo continua íntegro: dá para baixar o ZPL e imprimir no desktop.
-      els.btnZpl.disabled = false;
+      // O arquivo continua íntegro: dá para baixar o ZPL (não TSPL/PDF, que
+      // dependem do preview) e imprimir no desktop.
+      els.btnDownload.disabled = els.mode.value !== "zpl";
       return;
     }
 
@@ -264,7 +286,6 @@
   }
 
   function downloadZpl() {
-    if (currentIndex < 0) return;
     // Com "Desligado" (padrão) saem os bytes originais, sem nenhuma alteração.
     // É este arquivo que vai RAW para a impressora pelo aplicativo desktop.
     const level = els.boost.value;
@@ -274,6 +295,42 @@
       new Blob([data], { type: "application/octet-stream" }),
       currentLabelName() + suffix + ".zpl"
     );
+  }
+
+  async function downloadTspl() {
+    const level = els.boost.value;
+    const data = await window.LabelConverters.zplToTspl(currentRender, level);
+    const suffix = level === "desligado" ? "" : `-reforco-${level}`;
+    saveBlob(
+      new Blob([data], { type: "application/octet-stream" }),
+      currentLabelName() + suffix + ".tspl"
+    );
+  }
+
+  async function downloadPdf() {
+    const data = await window.LabelConverters.zplToPdf(currentRender);
+    saveBlob(new Blob([data], { type: "application/pdf" }), currentLabelName() + ".pdf");
+  }
+
+  async function downloadInSelectedMode() {
+    if (currentIndex < 0) return;
+    const mode = els.mode.value;
+
+    try {
+      if (mode === "tspl") {
+        if (!currentRender) throw new Error("Sem preview, não é possível converter para TSPL.");
+        await downloadTspl();
+      } else if (mode === "pdf") {
+        if (!currentRender) throw new Error("Sem preview, não é possível gerar o PDF.");
+        await downloadPdf();
+      } else {
+        downloadZpl();
+      }
+    } catch (err) {
+      const message = err.message || String(err);
+      setStatus(message, "err");
+      alert(message);
+    }
   }
 
   function saveBlob(blob, filename) {
