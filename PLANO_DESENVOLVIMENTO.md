@@ -115,7 +115,7 @@ bytes sem alterá-los antes do envio.
 ## 5. Estrutura de repositório proposta
 
 ```
-shopee-label-printer/
+ShopeeLabelPrinter/
 ├── src/
 │   └── shopee_label_printer/
 │       ├── __init__.py
@@ -152,7 +152,7 @@ shopee-label-printer/
 ## 6. Roadmap por fases
 
 ### Fase 0 — Fundação do repositório
-- [ ] Criar repositório no GitHub (`shopee-label-printer`, público ou privado).
+- [ ] Criar repositório no GitHub (`ShopeeLabelPrinter`, público ou privado).
 - [ ] Adicionar `.gitignore` (Python padrão + `dist/`, `build/`, `*.spec`).
 - [ ] Adicionar `LICENSE` (sugestão: MIT, simples e permissiva).
 - [ ] Mover o código atual para a estrutura de pastas da seção 5.
@@ -324,7 +324,7 @@ docs/
 
 1. No repositório GitHub: **Settings → Pages**.
 2. Em "Source", escolher **branch `main`, pasta `/docs`**.
-3. O site fica disponível em `https://SEU_USUARIO.github.io/shopee-label-printer/`.
+3. O site fica disponível em `https://SEU_USUARIO.github.io/ShopeeLabelPrinter/`.
 
 Não precisa de gerador estático (Jekyll, Hugo, etc.) para começar — HTML
 puro na pasta `/docs` já funciona. Se o projeto crescer e você quiser algo
@@ -337,7 +337,7 @@ Em vez de linkar direto pra um arquivo `.exe` (que fica desatualizado a
 cada versão), aponte o botão de download para:
 
 ```
-https://github.com/SEU_USUARIO/shopee-label-printer/releases/latest/download/ShopeeLabelPrinter.exe
+https://github.com/SEU_USUARIO/ShopeeLabelPrinter/releases/latest/download/ShopeeLabelPrinter.exe
 ```
 
 Esse link do GitHub sempre redireciona pro `.exe` da versão mais recente

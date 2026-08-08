@@ -24,7 +24,7 @@ __url__ = "https://github.com/brunotrolo/Shopee_Printer"
 
 Change it to:
 ```python
-__url__ = "https://github.com/brunotrolo/shopee-label-print"
+__url__ = "https://github.com/brunotrolo/ShopeeLabelPrinter"
 ```
 
 ### 1.2 Update `README.md`
@@ -36,7 +36,7 @@ https://github.com/brunotrolo/Shopee_Printer
 
 To:
 ```
-https://github.com/brunotrolo/shopee-label-print
+https://github.com/brunotrolo/ShopeeLabelPrinter
 ```
 
 Also update GitHub Pages URLs from:
@@ -46,7 +46,7 @@ brunotrolo.github.io/Shopee_Printer/
 
 To:
 ```
-brunotrolo.github.io/shopee-label-print/
+brunotrolo.github.io/ShopeeLabelPrinter/
 ```
 
 Check these specific sections:
@@ -75,8 +75,8 @@ Look for:
 
 Update to:
 ```html
-<a class="btn" href="https://github.com/brunotrolo/shopee-label-print" target="_blank" rel="noopener">
-<a class="btn primary" href="https://github.com/brunotrolo/shopee-label-print/releases/latest/download/ShopeeLabelPrinter.exe">
+<a class="btn" href="https://github.com/brunotrolo/ShopeeLabelPrinter" target="_blank" rel="noopener">
+<a class="btn primary" href="https://github.com/brunotrolo/ShopeeLabelPrinter/releases/latest/download/ShopeeLabelPrinter.exe">
 ```
 
 ### 1.5 Check GitHub Workflows (`.github/workflows/`)
@@ -104,7 +104,7 @@ You must do this through GitHub's web interface (not command-line):
 
 1. Go to https://github.com/brunotrolo/Shopee_Printer
 2. Click **Settings** (top-right menu)
-3. Under **Repository name**, change from `Shopee_Printer` to `shopee-label-print`
+3. Under **Repository name**, change from `Shopee_Printer` to `ShopeeLabelPrinter`
 4. Click **Rename**
 
 GitHub will:
@@ -123,7 +123,7 @@ https://brunotrolo.github.io/Shopee_Printer/
 
 After rename, they'll be at:
 ```
-https://brunotrolo.github.io/shopee-label-print/
+https://brunotrolo.github.io/ShopeeLabelPrinter/
 ```
 
 ### Option A: Simple Redirect (Easiest)
@@ -144,10 +144,10 @@ This requires more manual work outside this environment. After rename, you'll ne
 <!DOCTYPE html>
 <html>
 <head>
-    <meta http-equiv="refresh" content="0;url=https://brunotrolo.github.io/shopee-label-print/">
+    <meta http-equiv="refresh" content="0;url=https://brunotrolo.github.io/ShopeeLabelPrinter/">
 </head>
 <body>
-    <p>Redirecting to <a href="https://brunotrolo.github.io/shopee-label-print/">https://brunotrolo.github.io/shopee-label-print/</a></p>
+    <p>Redirecting to <a href="https://brunotrolo.github.io/ShopeeLabelPrinter/">https://brunotrolo.github.io/ShopeeLabelPrinter/</a></p>
 </body>
 </html>
 ```
@@ -160,7 +160,7 @@ Simply update all documentation to point to the new URL and accept that old book
 
 ## 🔍 Step 4: Update Package References (if published to PyPI)
 
-If `shopee-label-printer` is published to PyPI, you may need to:
+If `ShopeeLabelPrinterer` is published to PyPI, you may need to:
 - Verify the PyPI project settings
 - Update any mentions of installation commands
 - Document the old vs. new package names
@@ -174,12 +174,12 @@ Currently, the package is installed via GitHub releases, so this may not apply.
 After rename and updating all references:
 
 ### Test Web Version
-1. Visit: https://brunotrolo.github.io/shopee-label-print/
+1. Visit: https://brunotrolo.github.io/ShopeeLabelPrinter/
 2. Verify it loads correctly
 3. Test all functionality
 
 ### Test GitHub Links
-1. Go to the new repository: https://github.com/brunotrolo/shopee-label-print
+1. Go to the new repository: https://github.com/brunotrolo/ShopeeLabelPrinter
 2. Check that releases still exist
 3. Verify GitHub Pages is enabled
 4. Check GitHub Actions workflows run correctly
@@ -208,12 +208,12 @@ Issues:          https://github.com/brunotrolo/Shopee_Printer/issues
 
 ### After Rename
 ```
-Repository:      https://github.com/brunotrolo/shopee-label-print
-Releases:        https://github.com/brunotrolo/shopee-label-print/releases
-Actions:         https://github.com/brunotrolo/shopee-label-print/actions
-.exe Download:   https://github.com/brunotrolo/shopee-label-print/releases/latest/download/ShopeeLabelPrinter.exe
-GitHub Pages:    https://brunotrolo.github.io/shopee-label-print/
-Issues:          https://github.com/brunotrolo/shopee-label-print/issues
+Repository:      https://github.com/brunotrolo/ShopeeLabelPrinter
+Releases:        https://github.com/brunotrolo/ShopeeLabelPrinter/releases
+Actions:         https://github.com/brunotrolo/ShopeeLabelPrinter/actions
+.exe Download:   https://github.com/brunotrolo/ShopeeLabelPrinter/releases/latest/download/ShopeeLabelPrinter.exe
+GitHub Pages:    https://brunotrolo.github.io/ShopeeLabelPrinter/
+Issues:          https://github.com/brunotrolo/ShopeeLabelPrinter/issues
 ```
 
 ---
@@ -245,7 +245,7 @@ Issues:          https://github.com/brunotrolo/shopee-label-print/issues
 - [ ] Update `docs/index.html` — header links to repository and releases
 - [ ] Check `.github/workflows/` — verify no hardcoded repo references
 - [ ] Commit and push all changes to main branch
-- [ ] Rename repository on GitHub to `shopee-label-print`
+- [ ] Rename repository on GitHub to `ShopeeLabelPrinter`
 - [ ] Verify GitHub Pages works at new URL
 - [ ] Test downloads from new Releases page
 - [ ] Verify GitHub Actions workflows run correctly
