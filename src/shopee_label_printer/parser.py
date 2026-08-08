@@ -132,11 +132,12 @@ def split_labels(content: str) -> List[str]:
         else:
             pending += block
 
+    # O que sobrar depois do último ^XZ vai junto, mesmo sendo só uma quebra de
+    # linha: descartar mudaria os bytes entregues à impressora, e a promessa do
+    # projeto é que eles cheguem exatamente como vieram da Shopee.
     tail = content[last_end:]
     if current is not None:
-        if tail.strip():
-            current += tail
-        labels.append(current)
+        labels.append(current + tail)
     elif (pending + tail).strip():
         labels.append(pending + tail)
 

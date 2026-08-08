@@ -16,6 +16,15 @@
     { label: "25%", value: "0.25" },
   ];
 
+  // Mesmos níveis da versão desktop. Vale só para o ZPL baixado — ver a nota
+  // em applyPrintBoost (zpl.js).
+  const BOOST_CHOICES = [
+    { label: "Desligado", value: "desligado" },
+    { label: "Leve", value: "leve" },
+    { label: "Médio", value: "medio" },
+    { label: "Forte", value: "forte" },
+  ];
+
   const els = {};
   let labels = [];
   let currentIndex = -1;
@@ -30,7 +39,7 @@
       "dropzone", "file-input", "status", "label-list", "label-panel",
       "preview-canvas", "preview-stage", "preview-empty", "preview-meta",
       "zoom", "btn-print", "btn-png", "btn-zpl", "print-area", "print-size",
-      "label-count",
+      "label-count", "boost",
     ].forEach((id) => {
       els[id.replace(/-(\w)/g, (_, c) => c.toUpperCase())] = $(id);
     });
@@ -40,6 +49,13 @@
       option.value = level.value;
       option.textContent = level.label;
       els.zoom.appendChild(option);
+    });
+
+    BOOST_CHOICES.forEach((choice) => {
+      const option = document.createElement("option");
+      option.value = choice.value;
+      option.textContent = choice.label;
+      els.boost.appendChild(option);
     });
 
     els.dropzone.addEventListener("click", () => els.fileInput.click());
@@ -249,10 +265,15 @@
 
   function downloadZpl() {
     if (currentIndex < 0) return;
-    // Bytes originais, sem nenhuma alteração — é este arquivo que vai RAW
-    // para a impressora pelo aplicativo desktop.
-    const blob = new Blob([labels[currentIndex].data], { type: "application/octet-stream" });
-    saveBlob(blob, currentLabelName() + ".zpl");
+    // Com "Desligado" (padrão) saem os bytes originais, sem nenhuma alteração.
+    // É este arquivo que vai RAW para a impressora pelo aplicativo desktop.
+    const level = els.boost.value;
+    const data = window.ZPL.applyPrintBoost(labels[currentIndex].data, level);
+    const suffix = level === "desligado" ? "" : `-reforco-${level}`;
+    saveBlob(
+      new Blob([data], { type: "application/octet-stream" }),
+      currentLabelName() + suffix + ".zpl"
+    );
   }
 
   function saveBlob(blob, filename) {

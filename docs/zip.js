@@ -164,10 +164,11 @@
       }
     }
 
+    // O que sobrar depois do último ^XZ vai junto, mesmo sendo só uma quebra
+    // de linha: descartar mudaria os bytes entregues à impressora.
     const tail = content.slice(lastEnd);
     if (current !== null) {
-      if (tail.trim()) current += tail;
-      labels.push(current);
+      labels.push(current + tail);
     } else if ((pending + tail).trim()) {
       labels.push(pending + tail);
     }

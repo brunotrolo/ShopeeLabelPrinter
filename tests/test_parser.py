@@ -121,6 +121,27 @@ class TestSplitLabelsFormatoRealShopee:
         # o ~DG da segunda não pode vazar para a primeira
         assert "~DGR:B.GRF" not in result[0]
 
+    def test_nada_se_perde_na_separacao(self):
+        """
+        Juntar as etiquetas de volta tem que reconstruir o arquivo inteiro,
+        byte a byte — inclusive a quebra de linha depois do último ^XZ.
+
+        Essa é a garantia de que a separação não descarta nem duplica nada
+        antes dos bytes irem para a impressora.
+        """
+        original = self.DOWNLOAD + self.PRINT + self.CLEANUP + "\n"
+        assert "".join(split_labels(original)) == original
+
+    def test_quebra_de_linha_final_e_preservada(self):
+        original = self.DOWNLOAD + self.PRINT + self.CLEANUP + "\n"
+        assert split_labels(original)[0].endswith("^XZ\n")
+
+    def test_nada_se_perde_com_duas_etiquetas(self):
+        first = "~DGR:A.GRF,4,2,FFFF0000^XA^FO0,0^XGR:A.GRF,1,1^FS^XZ^XA^IDR:A.GRF^FS^XZ"
+        second = "~DGR:B.GRF,4,2,0000FFFF^XA^FO0,0^XGR:B.GRF,1,1^FS^XZ^XA^IDR:B.GRF^FS^XZ"
+        original = first + "\r\n" + second + "\r\n"
+        assert "".join(split_labels(original)) == original
+
     def test_no_label_renders_blank(self):
         """Toda etiqueta devolvida precisa ter algo que imprima."""
         from src.shopee_label_printer.renderer import render_zpl

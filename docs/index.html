@@ -61,6 +61,9 @@
         <button class="btn" id="btn-png" disabled>🖼️ Baixar PNG</button>
         <button class="btn" id="btn-zpl" disabled>📄 Baixar ZPL</button>
 
+        <label for="boost" style="font-size:.85rem;">Reforço do ZPL</label>
+        <select id="boost" title="Só afeta o arquivo ZPL baixado, não a impressão pelo navegador"></select>
+
         <span class="preview-meta" id="preview-meta"></span>
       </div>
 
@@ -78,6 +81,21 @@
         use a versão desktop, que fala direto com a impressora. Aqui a página já sai no
         tamanho físico exato (100 × 150 mm), o que costuma ficar bom, mas passa por
         rasterização do driver.
+      </div>
+
+      <div class="note">
+        <strong>Traço fino ou falhado?</strong>
+        Imprimindo <em>pelo navegador</em>, o escurecimento não vem daqui: ajuste em
+        <em>Painel de Controle → Dispositivos e Impressoras → botão direito na impressora
+        → Preferências de impressão</em>, na opção de <em>densidade</em> ou
+        <em>darkness</em>. Nesse caminho a impressora recebe uma imagem, e comando ZPL
+        nenhum chega até ela.
+        <br><br>
+        O seletor <strong>Reforço do ZPL</strong> acima vale só para o arquivo que você
+        <em>baixa</em> — ele acrescenta <code>^MD</code> (calor) e <code>^PR</code>
+        (velocidade) para quem for imprimir esse arquivo pela versão desktop. Se o código
+        de barras parar de ser lido pelo celular, baixe um nível: calor demais faz as
+        barras engordarem e colarem.
       </div>
     </section>
   </div>

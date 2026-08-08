@@ -13,6 +13,25 @@ e este projeto segue [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 - ⏳ Impressão de várias etiquetas de uma vez na versão web
 - ⏳ Suporte a múltiplos idiomas (i18n)
 
+## [0.4.1] - 2026-08-08
+
+### Corrigido
+- **A separação descartava o que vinha depois do último `^XZ`.** A etiqueta real
+  da Shopee termina com uma quebra de linha, e ela era jogada fora: 12337 bytes
+  entregues no lugar dos 12338 originais. Não muda o que sai impresso, mas o
+  projeto promete entregar os bytes exatamente como vieram — e não estava.
+  Agora `"".join(split_labels(conteudo)) == conteudo`, com teste travando isso.
+
+### Adicionado
+- **Reforço do ZPL na versão web**, aplicado ao arquivo baixado, com os mesmos
+  quatro níveis da versão desktop. Verificado no navegador que os bytes saem
+  idênticos aos que o desktop enviaria em cada nível.
+
+  Não afeta a impressão pelo próprio navegador — nesse caminho a impressora
+  recebe uma imagem pelo driver do sistema e nenhum comando ZPL chega até ela.
+  A página passou a dizer isso e a indicar onde fica o ajuste de densidade nas
+  preferências de impressão do Windows.
+
 ## [0.4.0] - 2026-08-08
 
 ### Corrigido

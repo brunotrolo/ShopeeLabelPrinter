@@ -575,7 +575,61 @@
     }
   }
 
+  // -- reforço de impressão -------------------------------------------------
+  //
+  // Mesmos valores de PRINT_BOOST_LEVELS em printer.py: o ZPL baixado aqui tem
+  // que sair igual ao que a versão desktop enviaria com o mesmo nível.
+  //
+  // Só serve para o arquivo baixado. A impressão pelo navegador manda uma
+  // imagem pelo driver do sistema, e nesse caminho a impressora nunca vê
+  // comando ZPL nenhum — ^MD e ^PR seriam descartados. Quem controla o
+  // escurecimento ali é a configuração do driver.
+  const PRINT_BOOST_LEVELS = {
+    desligado: [null, null],
+    leve: [6, 3],
+    medio: [12, 2],
+    forte: [18, 2],
+  };
+
+  /**
+   * Insere ^MD (escurecimento) e ^PR (velocidade) logo após o primeiro ^XA.
+   *
+   * Não mexe no desenho: os dois comandos controlam o calor da cabeça térmica
+   * e a velocidade do papel, não o conteúdo. Nenhum ponto é movido — engrossar
+   * o bitmap alargaria também as barras do código de barras e estragaria a
+   * proporção barra/espaço que o leitor mede.
+   */
+  function applyPrintBoost(data, level) {
+    const [darkness, speed] = PRINT_BOOST_LEVELS[level] || [null, null];
+    if (darkness === null && speed === null) return data;
+
+    // procura os bytes de "^XA"
+    let at = -1;
+    for (let i = 0; i + 2 < data.length; i++) {
+      if (data[i] === 0x5e && data[i + 1] === 0x58 && data[i + 2] === 0x41) {
+        at = i + 3;
+        break;
+      }
+    }
+    if (at === -1) return data;
+
+    let commands = "";
+    if (darkness !== null) commands += `^MD${darkness}`;
+    if (speed !== null) commands += `^PR${speed}`;
+
+    const extra = new Uint8Array(commands.length);
+    for (let i = 0; i < commands.length; i++) extra[i] = commands.charCodeAt(i);
+
+    const out = new Uint8Array(data.length + extra.length);
+    out.set(data.subarray(0, at), 0);
+    out.set(extra, at);
+    out.set(data.subarray(at), at + extra.length);
+    return out;
+  }
+
   global.ZPL = {
+    PRINT_BOOST_LEVELS,
+    applyPrintBoost,
     DEFAULT_DPI,
     DEFAULT_WIDTH_DOTS,
     DEFAULT_HEIGHT_DOTS,
