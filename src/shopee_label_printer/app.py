@@ -506,17 +506,33 @@ class ShopeePrintApp(tk.Tk):
 
         downloads = self._get_downloads_folder()
         if not downloads.exists():
+            self._log(f"⚠️  Pasta Downloads não encontrada: {downloads}")
             return 0
 
         new_count = 0
         try:
-            # Listar arquivos ZPL/TSPL/TXT/PRN na Downloads
-            pattern_files = list(downloads.glob("Etiqueta de Envio ZPL*.*"))
             supported_ext = {".zpl", ".tspl", ".txt", ".prn"}
+
+            # Listar arquivos com padrão Shopee (prioridade)
+            pattern_files = list(downloads.glob("Etiqueta de Envio ZPL*.*"))
             zpl_files = [
                 f for f in pattern_files
                 if f.suffix.lower() in supported_ext and f.is_file()
             ]
+
+            # Se não encontrou com padrão Shopee, procura todos com extensão suportada
+            if not zpl_files:
+                all_files = list(downloads.glob("*.*"))
+                zpl_files = [
+                    f for f in all_files
+                    if f.suffix.lower() in supported_ext and f.is_file()
+                ]
+                if zpl_files:
+                    self._log(f"💡 Nenhum arquivo com padrão 'Etiqueta de Envio ZPL', encontrados {len(zpl_files)} arquivo(s) com extensão suportada")
+
+            # Log de debug: mostrar quantos arquivos encontrou
+            if zpl_files:
+                self._log(f"🔍 Auto-import: encontrados {len(zpl_files)} arquivo(s) candidato(s)")
 
             # Carregar hashes conhecidos
             known_files = set(Config.get("auto_import_loaded_files", []))
@@ -528,6 +544,8 @@ class ShopeePrintApp(tk.Tk):
                 if file_hash not in known_files:
                     new_files.append(filepath)
                     known_files.add(file_hash)
+                else:
+                    self._log(f"⊙ {filepath.name} já carregado anteriormente")
 
             if not new_files:
                 return 0
@@ -580,7 +598,10 @@ class ShopeePrintApp(tk.Tk):
     def _poll_auto_load(self) -> None:
         """Executa o ciclo de polling para auto-import (não-bloqueante)."""
         if self._auto_import_active:
-            self._auto_load_from_downloads()
+            try:
+                self._auto_load_from_downloads()
+            except Exception as e:  # noqa: BLE001
+                self._log(f"❌ Erro no polling de auto-import: {e}")
             interval = Config.get("auto_import_interval_ms", 5000)
             self.after(interval, self._poll_auto_load)
 
