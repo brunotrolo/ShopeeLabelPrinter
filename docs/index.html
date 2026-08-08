@@ -1,139 +1,158 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shopee Label Printer</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; line-height: 1.6; color: #333; }
-        header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 3rem 2rem; text-align: center; }
-        header h1 { font-size: 3rem; margin-bottom: 0.5rem; }
-        header p { font-size: 1.2rem; opacity: 0.9; }
-        nav { background: #f8f9fa; padding: 1rem 2rem; border-bottom: 1px solid #ddd; }
-        nav a { margin-right: 2rem; text-decoration: none; color: #667eea; font-weight: 500; }
-        .container { max-width: 1000px; margin: 0 auto; padding: 2rem; }
-        .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; margin: 3rem 0; }
-        .feature { background: #f8f9fa; padding: 1.5rem; border-radius: 8px; border-left: 4px solid #667eea; }
-        .feature h3 { margin-bottom: 0.5rem; color: #667eea; }
-        .cta { display: inline-block; background: #667eea; color: white; padding: 1rem 2rem; border-radius: 8px; text-decoration: none; margin: 1rem 0; font-weight: bold; }
-        .cta:hover { background: #764ba2; }
-        footer { background: #f8f9fa; padding: 2rem; text-align: center; margin-top: 3rem; border-top: 1px solid #ddd; }
-        code { background: #f0f0f0; padding: 0.2rem 0.5rem; border-radius: 3px; font-family: 'Courier New', monospace; }
-        .badge { display: inline-block; background: #667eea; color: white; padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.9rem; margin-right: 0.5rem; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shopee Label Printer — versão web</title>
+  <meta name="description" content="Importe o ZIP de etiquetas da Shopee, veja o preview em 203 DPI e imprima. Roda inteiro no navegador, sem enviar nada para servidor.">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🖨️</text></svg>">
+  <style id="print-size"></style>
 </head>
 <body>
-    <header>
-        <h1>🖨️ Shopee Label Printer</h1>
-        <p>Imprima etiquetas de envio da Shopee direto na sua impressora térmica</p>
-    </header>
 
-    <nav>
-        <a href="#features">Recursos</a>
-        <a href="#download">Download</a>
-        <a href="#docs">Documentação</a>
-        <a href="https://github.com/brunotrolo/Shopee_Printer" target="_blank">GitHub</a>
-    </nav>
+<header class="site">
+  <h1>🖨️ Shopee Label Printer</h1>
+  <span class="tagline">versão web · preview em 203 DPI</span>
+  <a class="btn" href="https://github.com/brunotrolo/Shopee_Printer" target="_blank" rel="noopener">Código no GitHub</a>
+  <a class="btn primary" href="https://github.com/brunotrolo/Shopee_Printer/releases/latest/download/ShopeeLabelPrinter.exe">⬇ Baixar versão desktop (.exe)</a>
+</header>
 
-    <div class="container">
-        <section>
-            <h2>O que é?</h2>
-            <p>Um programa desktop para Windows que imprime etiquetas de envio da Shopee <strong>direto em modo RAW</strong> (bytes crus) para sua impressora térmica, preservando 100% da resolução original — sem conversão para PDF, sem reamostragem.</p>
-            <p style="margin-top: 1rem;">
-                <span class="badge">Python 3.10+</span>
-                <span class="badge">Zero Dependências</span>
-                <span class="badge">Windows 10/11</span>
-                <span class="badge">MIT License</span>
-            </p>
-        </section>
+<main>
+  <div class="workspace">
 
-        <section id="features">
-            <h2 style="margin-top: 2rem;">Recursos Principais</h2>
-            <div class="features">
-                <div class="feature">
-                    <h3>📦 Importação Flexível</h3>
-                    <p>ZIP, pasta ou arquivo TXT/ZPL avulso da Shopee</p>
-                </div>
-                <div class="feature">
-                    <h3>🔀 Separação Automática</h3>
-                    <p>Detecta e separa múltiplas etiquetas no mesmo arquivo</p>
-                </div>
-                <div class="feature">
-                    <h3>🖨️ Envio RAW</h3>
-                    <p>Bytes crus direto para impressora — sem perder qualidade</p>
-                </div>
-                <div class="feature">
-                    <h3>🔒 100% Local</h3>
-                    <p>Dados nunca são enviados a servidores (privacidade garantida)</p>
-                </div>
-                <div class="feature">
-                    <h3>📊 Log Profissional</h3>
-                    <p>Arquivo de logs para diagnóstico remoto</p>
-                </div>
-                <div class="feature">
-                    <h3>⚡ Interface Simples</h3>
-                    <p>GUI intuitiva em tkinter, sem complexidade</p>
-                </div>
-            </div>
-        </section>
+    <!-- coluna esquerda: importação + lista -->
+    <div>
+      <section class="panel">
+        <h2>1. Importar etiquetas</h2>
 
-        <section id="download">
-            <h2 style="margin-top: 2rem;">Download</h2>
-            <h3 style="margin-top: 1rem;">Opção A: .exe Standalone (recomendado)</h3>
-            <p>Não precisa instalar nada — é só executar.</p>
-            <a href="https://github.com/brunotrolo/Shopee_Printer/releases/latest/download/ShopeeLabelPrinter.exe" class="cta">📥 Baixar ShopeeLabelPrinter.exe</a>
+        <div id="dropzone" class="dropzone" role="button" tabindex="0"
+             aria-label="Selecionar arquivo ZIP ou TXT de etiquetas">
+          <span class="icon">📦</span>
+          <strong>Solte o ZIP aqui</strong>
+          <div class="hint">ou clique para escolher · .zip .txt .zpl .prn .tspl</div>
+        </div>
+        <input type="file" id="file-input" accept=".zip,.txt,.zpl,.prn,.tspl" multiple hidden>
 
-            <h3 style="margin-top: 2rem;">Opção B: Rodar com Python</h3>
-            <p>Para desenvolvedores ou se preferir rodar do código-fonte:</p>
-            <pre style="background: #f0f0f0; padding: 1rem; border-radius: 4px; overflow-x: auto;">python -m shopee_label_printer</pre>
+        <p id="status" class="status"></p>
 
-            <p style="margin-top: 1rem; font-size: 0.9rem; color: #666;">Versão atual: <strong>0.2.0</strong> | Lançada em 08/08/2026</p>
-        </section>
+        <div class="note">
+          <strong>Seus dados não saem daqui.</strong> O arquivo é lido pelo próprio navegador —
+          nada é enviado para nenhum servidor. A etiqueta contém o endereço do destinatário,
+          e ele continua só no seu computador.
+        </div>
+      </section>
 
-        <section id="docs">
-            <h2 style="margin-top: 2rem;">Documentação</h2>
-            <ul style="margin-left: 2rem;">
-                <li><a href="https://github.com/brunotrolo/Shopee_Printer/blob/main/README.md" target="_blank">README</a> — Visão geral e início rápido</li>
-                <li><a href="https://github.com/brunotrolo/Shopee_Printer/blob/main/LEIA-ME.md" target="_blank">LEIA-ME</a> — Instruções detalhadas em português</li>
-                <li><a href="https://github.com/brunotrolo/Shopee_Printer/blob/main/PLANO_DESENVOLVIMENTO.md" target="_blank">Roadmap</a> — Plano de desenvolvimento em 5 fases</li>
-                <li><a href="https://github.com/brunotrolo/Shopee_Printer/blob/main/CHANGELOG.md" target="_blank">Changelog</a> — Histórico de versões</li>
-            </ul>
-        </section>
-
-        <section>
-            <h2 style="margin-top: 2rem;">Requisitos</h2>
-            <ul style="margin-left: 2rem;">
-                <li><strong>Windows 10/11</strong> (alvo principal)</li>
-                <li><strong>Impressora térmica</strong> compatível com TSPL/ZPL (ex: FY-1075)</li>
-                <li>Python 3.10+ (se rodar como script)</li>
-            </ul>
-        </section>
-
-        <section>
-            <h2 style="margin-top: 2rem;">Status do Projeto</h2>
-            <p><strong>Fase 4 de 5 completa.</strong></p>
-            <ul style="margin-left: 2rem;">
-                <li>✅ Fundação do repositório (Fase 0)</li>
-                <li>✅ Estabilização com testes (Fase 1)</li>
-                <li>✅ Empacotamento profissional (Fase 2)</li>
-                <li>✅ Robustez de parsing (Fase 3)</li>
-                <li>✅ Experiência de uso (Fase 4)</li>
-                <li>✅ Documentação e GitHub Pages (Fase 5)</li>
-            </ul>
-            <p style="margin-top: 1rem;"><strong>Nota:</strong> Teste em impressora FY-1075 real ainda não foi realizado (bloqueador de release 1.0.0).</p>
-        </section>
-
-        <section>
-            <h2 style="margin-top: 2rem;">Licença & Contribuição</h2>
-            <p>Licença MIT — use livremente em projetos pessoais ou comerciais.</p>
-            <p style="margin-top: 1rem;">Contribuições bem-vindas! <a href="https://github.com/brunotrolo/Shopee_Printer" target="_blank">Visite o repositório no GitHub</a> para abrir issues ou PRs.</p>
-        </section>
+      <section class="panel" id="label-panel" style="margin-top: 20px;">
+        <h2>2. Etiquetas encontradas <span id="label-count"></span></h2>
+        <ul id="label-list" class="label-list"></ul>
+      </section>
     </div>
 
-    <footer>
-        <p>Shopee Label Printer © 2026 | <a href="https://github.com/brunotrolo/Shopee_Printer" target="_blank">GitHub</a></p>
-        <p style="margin-top: 1rem; font-size: 0.9rem; color: #666;">Desenvolvido com ❤️ em Python</p>
-    </footer>
+    <!-- coluna direita: preview -->
+    <section class="panel">
+      <h2>3. Preview da etiqueta</h2>
+
+      <div class="preview-toolbar">
+        <label for="zoom" style="font-size:.85rem;">Zoom</label>
+        <select id="zoom"></select>
+
+        <button class="btn" id="btn-print" disabled>🖨️ Imprimir</button>
+        <button class="btn" id="btn-png" disabled>🖼️ Baixar PNG</button>
+        <button class="btn" id="btn-zpl" disabled>📄 Baixar ZPL</button>
+
+        <span class="preview-meta" id="preview-meta"></span>
+      </div>
+
+      <div class="preview-stage" id="preview-stage">
+        <div class="preview-empty" id="preview-empty">
+          Importe um arquivo para ver o preview da etiqueta
+        </div>
+        <canvas id="preview-canvas" style="display:none;"></canvas>
+      </div>
+
+      <div class="note">
+        <strong>Impressão pelo navegador passa pelo driver do Windows.</strong>
+        O navegador não consegue enviar bytes RAW para a impressora — essa é uma limitação
+        dele, não do projeto. Para imprimir <em>sem nenhuma perda de resolução</em>,
+        use a versão desktop, que fala direto com a impressora. Aqui a página já sai no
+        tamanho físico exato (100 × 150 mm), o que costuma ficar bom, mas passa por
+        rasterização do driver.
+      </div>
+    </section>
+  </div>
+
+  <!-- comparação entre as duas versões -->
+  <section class="info-section">
+    <h2>Duas versões, mesmo núcleo</h2>
+    <p style="font-size:.9rem; color:var(--text-muted); max-width:70ch;">
+      As duas leem o ZIP, separam as etiquetas e decodificam o bitmap embutido com
+      exatamente o mesmo algoritmo — o preview é idêntico nas duas. A diferença está
+      só em como cada uma chega até a impressora.
+    </p>
+
+    <div class="table-scroll">
+      <table class="compare">
+        <thead>
+          <tr>
+            <th>Recurso</th>
+            <th>💻 Desktop (.exe)</th>
+            <th>🌐 Web (esta página)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Importar ZIP / pasta / TXT</td><td class="yes">✓ Sim</td><td class="yes">✓ Sim (ZIP e arquivos)</td></tr>
+          <tr><td>Separar etiquetas concatenadas</td><td class="yes">✓ Sim</td><td class="yes">✓ Sim</td></tr>
+          <tr><td>Preview em 203 DPI</td><td class="yes">✓ Sim</td><td class="yes">✓ Sim</td></tr>
+          <tr><td><strong>Envio RAW (resolução máxima)</strong></td><td class="yes">✓ Sim</td><td class="no">✗ O navegador não permite</td></tr>
+          <tr><td>Impressão via driver do sistema</td><td class="no">— não usa</td><td class="yes">✓ Sim, em 100 × 150 mm</td></tr>
+          <tr><td>Imprimir várias de uma vez</td><td class="yes">✓ Sim</td><td class="no">✗ Uma por vez</td></tr>
+          <tr><td>Exportar PNG / ZPL</td><td class="no">—</td><td class="yes">✓ Sim</td></tr>
+          <tr><td>Instalação</td><td>Baixar o .exe</td><td class="yes">✓ Nenhuma</td></tr>
+          <tr><td>Funciona no celular / Mac / Linux</td><td class="no">✗ Windows</td><td class="yes">✓ Qualquer navegador</td></tr>
+          <tr><td>Dados ficam no seu computador</td><td class="yes">✓ Sim</td><td class="yes">✓ Sim</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p style="font-size:.9rem; margin-top:18px; max-width:70ch;">
+      <strong>Como usar as duas juntas:</strong> confira as etiquetas aqui no navegador —
+      de qualquer aparelho, sem instalar nada — e mande imprimir pela versão desktop
+      quando quiser a fidelidade byte a byte na FY-1075.
+    </p>
+  </section>
+
+  <section class="info-section">
+    <h2>Requisitos</h2>
+    <ul style="font-size:.9rem; max-width:70ch;">
+      <li><strong>Versão web:</strong> Chrome 80+, Edge 80+, Firefox 113+ ou Safari 16.4+
+        (a leitura de ZIP usa <code>DecompressionStream</code>, nativo do navegador).</li>
+      <li><strong>Versão desktop:</strong> Windows 10/11 e uma impressora térmica
+        compatível com TSPL/ZPL a 203 DPI (referência: FY-1075).</li>
+    </ul>
+  </section>
+
+  <section class="info-section">
+    <h2>Documentação</h2>
+    <ul style="font-size:.9rem;">
+      <li><a href="https://github.com/brunotrolo/Shopee_Printer/blob/main/README.md" target="_blank" rel="noopener">README</a> — visão geral e início rápido</li>
+      <li><a href="https://github.com/brunotrolo/Shopee_Printer/blob/main/LEIA-ME.md" target="_blank" rel="noopener">LEIA-ME</a> — instruções detalhadas em português</li>
+      <li><a href="https://github.com/brunotrolo/Shopee_Printer/blob/main/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a> — histórico de versões</li>
+      <li><a href="https://github.com/brunotrolo/Shopee_Printer/blob/main/PLANO_DESENVOLVIMENTO.md" target="_blank" rel="noopener">Plano de desenvolvimento</a> — escopo e roadmap</li>
+    </ul>
+  </section>
+</main>
+
+<footer class="site">
+  Shopee Label Printer · licença MIT ·
+  <a href="https://github.com/brunotrolo/Shopee_Printer" target="_blank" rel="noopener">github.com/brunotrolo/Shopee_Printer</a>
+</footer>
+
+<!-- destino da impressão: só isto vai para o papel -->
+<div id="print-area"></div>
+
+<script src="zip.js"></script>
+<script src="zpl.js"></script>
+<script src="app.js"></script>
 </body>
 </html>

@@ -49,6 +49,30 @@ class TestSplitLabels:
         result = split_labels(content)
         assert len(result) == 1
 
+    def test_label_with_embedded_image_is_not_split(self):
+        """
+        Etiqueta única com imagem embutida: o ~DG fica DENTRO do ^XA...^XZ.
+        Cortar no ~DG separava o cabeçalho da imagem e criava uma etiqueta
+        fantasma em branco, que ia parar na impressora no 'Imprimir todas'.
+        """
+        content = "^XA^PW812^LL1218~DGR:IMG.GRF,4,2,FFFF0000^FO0,0^XGR:IMG.GRF,1,1^FS^XZ"
+        result = split_labels(content)
+        assert len(result) == 1
+        assert result[0].startswith("^XA")
+        assert "~DG" in result[0]
+
+    def test_two_labels_with_embedded_images(self):
+        """Duas etiquetas com imagem: divide em 2, cada uma com seu cabeçalho."""
+        one = "^XA^PW812^LL1218~DGR:A.GRF,2,2,FFFF^FO0,0^XGR:A.GRF,1,1^FS^XZ"
+        result = split_labels(one + one)
+        assert len(result) == 2
+        assert all(part.startswith("^XA") and "~DG" in part for part in result)
+
+    def test_dg_only_file_still_splits_on_dg(self):
+        """Arquivo sem ^XA nenhum: aí sim o ~DG é o delimitador."""
+        result = split_labels("~DGImage1~DGImage2")
+        assert len(result) == 2
+
 
 class TestFindLabelFiles:
     """Testes para a função find_label_files."""

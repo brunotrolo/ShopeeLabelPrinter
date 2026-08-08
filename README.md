@@ -6,40 +6,60 @@
 
 **Imprima etiquetas de envio da Shopee direto na sua impressora térmica, sem perder qualidade.**
 
-Este programa importa ZIPs baixados da Shopee, extrai as etiquetas em formato ZPL/TSPL e envia cada uma **em modo RAW** (bytes crus) para uma impressora térmica compatível — preservando 100% da resolução original, sem conversão para PDF ou reamostragem.
+Importa os ZIPs baixados da Shopee, extrai as etiquetas em formato ZPL/TSPL, **mostra o preview de cada uma em 203 DPI** e envia **em modo RAW** (bytes crus) para uma impressora térmica compatível — preservando 100% da resolução original, sem conversão para PDF ou reamostragem.
+
+## 🖥️ Duas versões
+
+| | 💻 **Desktop** (.exe) | 🌐 **Web** ([abrir](https://brunotrolo.github.io/Shopee_Printer/)) |
+|---|---|---|
+| Importar ZIP / pasta / TXT | ✅ | ✅ |
+| Separar etiquetas concatenadas | ✅ | ✅ |
+| Preview em 203 DPI | ✅ | ✅ |
+| **Envio RAW (resolução máxima)** | ✅ | ❌ o navegador não permite |
+| Impressão pelo driver do sistema | — | ✅ em 100 × 150 mm |
+| Imprimir várias de uma vez | ✅ | ❌ uma por vez |
+| Exportar PNG / ZPL | — | ✅ |
+| Instalação | baixar o .exe | ✅ nenhuma |
+| Mac / Linux / celular | ❌ Windows | ✅ qualquer navegador |
+| Dados ficam no seu computador | ✅ | ✅ |
+
+As duas compartilham o mesmo algoritmo de decodificação (`renderer.py` e `docs/zpl.js`), então **o preview é idêntico**. A diferença está só em como cada uma chega até a impressora.
+
+> **Por que a web não imprime em RAW?** Nenhum navegador consegue mandar bytes crus para uma impressora — é uma restrição do sandbox do navegador, não uma limitação deste projeto. A versão web imprime pelo driver do sistema, no tamanho físico exato. Para a fidelidade byte a byte na FY-1075, use a versão desktop.
+
+**Fluxo recomendado:** confira as etiquetas no navegador — de qualquer aparelho, sem instalar nada — e mande imprimir pelo desktop.
 
 ## 🎯 O que faz
 
 ✅ Importar ZIP, pasta ou arquivo TXT/ZPL avulso da Shopee  
 ✅ Separar automaticamente múltiplas etiquetas concatenadas no mesmo arquivo  
+✅ **Preview da etiqueta antes de imprimir**, na resolução nativa da impressora  
 ✅ Enviar em modo RAW direto para a impressora térmica (não passa por PDF)  
-✅ Interface gráfica amigável (tkinter)  
 ✅ Rodar 100% localmente — seus dados de endereço nunca são enviados a servidores  
 ✅ **Zero dependências externas** — não precisa `pip install` nada além do Python
 
 ## ⚡ Início Rápido
 
-### Opção A: Rodar com Python instalado
+### Opção A: Versão web (não instala nada)
+
+Abra **[brunotrolo.github.io/Shopee_Printer](https://brunotrolo.github.io/Shopee_Printer/)**, arraste o ZIP e veja o preview. Funciona em Chrome 80+, Edge 80+, Firefox 113+ e Safari 16.4+.
+
+### Opção B: Usar o .exe standalone (sem Python)
+
+1. Baixe o `ShopeeLabelPrinter.exe` mais recente em [Releases](https://github.com/brunotrolo/Shopee_Printer/releases)
+2. Dê duplo clique no `.exe` — nenhuma instalação necessária
+3. Funciona em qualquer Windows 10/11, com ou sem Python instalado
+
+### Opção C: Rodar com Python instalado
 
 1. Instale Python 3.10+: https://www.python.org/downloads/
    - Na instalação, marque **"Add Python to PATH"**
-
 2. Clone o repositório ou baixe como ZIP
-
 3. Abra o terminal/PowerShell na pasta do projeto e execute:
    ```bash
    python -m shopee_label_printer
    ```
-
-4. Selecione seu ZIP da Shopee, escolha a impressora e clique em **"Imprimir"**
-
-### Opção B: Usar o .exe standalone (sem Python)
-
-1. Baixe o arquivo `ShopeeLabelPrinter.exe` mais recente em [Releases](https://github.com/brunotrolo/Shopee_Printer/releases)
-
-2. Dê duplo clique no `.exe` — é isso, nenhuma instalação necessária
-
-3. Funciona em qualquer Windows 10/11, com ou sem Python instalado
+4. Selecione seu ZIP da Shopee, confira o preview, escolha a impressora e clique em **"Imprimir"**
 
 ## 📋 Requisitos
 
@@ -57,10 +77,26 @@ A impressora deve:
 ## 🚀 Como usar
 
 1. **Importar**: Clique em **"Importar ZIP / Pasta / TXT"** e selecione o arquivo da Shopee
-2. **Conferir**: Veja a lista de etiquetas encontradas
+2. **Conferir**: Veja a lista de etiquetas encontradas e **o preview de cada uma**
 3. **Selecionar impressora**: Escolha sua impressora térmica no dropdown
-4. **Imprimir**: Clique em **"Imprimir todas"** ou selecione algumas e clique em **"Imprimir selecionadas"**
+4. **Imprimir**: Clique em **"Imprimir todas"** ou selecione algumas e clique em **"Selecionadas"**
 5. **Log**: Acompanhe o andamento — ele avisa se alguma etiqueta falhou
+
+## 🔍 Como funciona o preview
+
+A etiqueta da Shopee traz o desenho embutido como um bitmap nos comandos `~DG` / `^GFA`.
+O preview decodifica esse bitmap e mostra **1 pixel para cada ponto impresso** — ou seja,
+exatamente o que vai sair na FY-1075 (203 DPI, 812 × 1218 pontos numa etiqueta 100 × 150 mm).
+
+São aceitos os três formatos que a ZPL usa para o campo gráfico: hexadecimal puro,
+hexadecimal com compressão ASCII (`G-Y`, `g-z`, `,`, `!`, `:`) e `:Z64:` / `:B64:`.
+Comandos vetoriais (`^GB`, `^FD`, `^BC` Code 128) são desenhados por cima.
+
+Para caber na tela, a imagem é reduzida por **média de área** e não por vizinho mais
+próximo — sem isso, as barras de 1 ponto do código de barras sumiriam na redução.
+
+> O preview **nunca altera os bytes** que vão para a impressora: ele só lê. O envio
+> continua sendo o arquivo original, byte a byte.
 
 ## 📁 Estrutura do Projeto
 
@@ -70,20 +106,40 @@ shopee-label-printer/
 │   └── shopee_label_printer/
 │       ├── __init__.py          # Pacote
 │       ├── __main__.py          # Ponto de entrada (python -m)
-│       ├── app.py               # Interface gráfica (tkinter)
+│       ├── app.py               # Interface gráfica (tkinter) + preview
 │       ├── parser.py            # Extração de ZIP + separação de etiquetas
-│       └── printer.py           # Envio RAW + listagem de impressoras
-├── tests/
-│   ├── test_parser.py           # Testes do parser
-│   ├── test_printer.py          # Testes da impressão (mock)
-│   └── fixtures/                # Dados de teste
-├── docs/                        # Documentação (GitHub Pages)
+│       ├── printer.py           # Envio RAW + listagem de impressoras
+│       ├── renderer.py          # Decodificação ZPL -> imagem (preview)
+│       ├── config.py            # Configuração persistente
+│       ├── logger.py            # Log em arquivo + tela
+│       ├── utils.py             # Ordenação de impressoras, formatação
+│       └── validators.py        # Validação de etiquetas
+├── tests/                       # 125 testes automatizados
+├── docs/                        # ► APLICATIVO WEB (GitHub Pages)
+│   ├── index.html               # Interface
+│   ├── app.js                   # Lógica da tela
+│   ├── zip.js                   # Leitura de ZIP (DecompressionStream)
+│   ├── zpl.js                   # Renderizador ZPL (porta de renderer.py)
+│   └── style.css
 ├── LEIA-ME.md                   # Instruções de uso (português)
 ├── PLANO_DESENVOLVIMENTO.md     # Roadmap detalhado (5 fases)
 ├── CHANGELOG.md                 # Histórico de versões
 ├── LICENSE                      # MIT
 └── README.md                    # Este arquivo
 ```
+
+### Versão web em desenvolvimento
+
+A pasta `docs/` é servida direto pelo GitHub Pages — não há build. Para testar local:
+
+```bash
+cd docs && python -m http.server 8000
+# abra http://localhost:8000
+```
+
+`docs/zpl.js` é uma porta fiel de `src/shopee_label_printer/renderer.py`.
+**Mudou a decodificação num? Mude no outro** — os dois devem produzir a mesma
+imagem para a mesma etiqueta.
 
 ## 🔧 Desenvolvimento
 
@@ -94,15 +150,14 @@ pip install pytest
 pytest tests/
 ```
 
-### Modularizar o código
-
-O projeto está separado em 3 módulos principais:
+### Módulos
 
 - **`parser.py`**: Extração de ZIP, busca de arquivos, separação de etiquetas
 - **`printer.py`**: Listagem de impressoras, envio RAW via winspool/lp
+- **`renderer.py`**: Decodificação do ZPL em imagem, para o preview
 - **`app.py`**: Interface gráfica em tkinter
 
-Isso permite testar a lógica de arquivo e impressão sem precisar de uma GUI ou impressora real.
+Isso permite testar parsing, decodificação e impressão sem precisar de GUI nem de impressora real.
 
 ### Gerar .exe standalone
 
@@ -118,16 +173,18 @@ O `.exe` será criado em `dist/ShopeeLabelPrinter.exe`.
 Veja [PLANO_DESENVOLVIMENTO.md](PLANO_DESENVOLVIMENTO.md) para o plano detalhado em 5 fases:
 
 1. ✅ **Fase 0**: Fundação do repositório (estrutura de pastas, modularização)
-2. ⏳ **Fase 1**: Estabilização (teste FY-1075, tratamento de erros, logging)
-3. ⏳ **Fase 2**: Empacotamento profissional (CI/CD, GitHub Actions, GitHub Releases)
-4. ⏳ **Fase 3**: Robustez de parsing (casos-limite, fixtures reais)
-5. ⏳ **Fase 4-5**: UX + documentação (GitHub Pages, features extras)
+2. ⏳ **Fase 1**: Estabilização — tratamento de erros e logging prontos; **falta o teste na FY-1075**
+3. ✅ **Fase 2**: Empacotamento profissional (CI/CD, GitHub Actions, GitHub Releases)
+4. ✅ **Fase 3**: Robustez de parsing (casos-limite, decodificação de gráficos)
+5. ✅ **Fase 4-5**: UX + preview + versão web no GitHub Pages
 
 ## ⚠️ Limitações Conhecidas
 
-- **Teste em hardware real ainda não foi feito** — a lógica foi validada, mas impressão na FY-1075 precisa ser testada
-- Suporte oficial apenas para Windows (macOS/Linux têm fallback para CUPS, não testado)
-- Impressora deve estar instalada antes de abrir o programa
+- **Teste em hardware real ainda não foi feito** — a lógica e a decodificação foram validadas com testes automatizados, mas a impressão na FY-1075 continua sendo o bloqueador do 1.0.0
+- A **versão web não imprime em RAW** — nenhum navegador consegue; ela imprime pelo driver do sistema, no tamanho físico exato
+- **QR Code (`^BQ`) aparece como marcador** no preview, não decodificado. Na prática isso raramente aparece: a Shopee manda a etiqueta inteira como bitmap, e aí o QR vem desenhado dentro dele — o que é renderizado normalmente
+- Envio RAW oficialmente só no Windows (macOS/Linux têm fallback para CUPS, não testado)
+- A impressora deve estar instalada antes de abrir o programa
 
 ## 🤝 Contribuição
 

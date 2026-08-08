@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "shopee-label-printer"
-version = "0.1.0"
+version = "0.3.0"
 description = "Print Shopee shipping labels directly to thermal printer in RAW mode, preserving full resolution"
 readme = "README.md"
 license = {text = "MIT"}

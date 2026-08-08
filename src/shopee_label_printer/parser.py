@@ -75,13 +75,16 @@ def split_labels(content: str) -> List[str]:
     """
     Alguns arquivos trazem mais de uma etiqueta concatenada no mesmo TXT.
     Divide o conteúdo em blocos individuais, um por etiqueta.
+
+    O delimitador correto é o ^XA: toda etiqueta ZPL é um bloco ^XA...^XZ, e
+    o ~DG da imagem vem *dentro* dele. Cortar no ~DG separaria o cabeçalho
+    (^XA^PW^LL) da imagem e criaria uma etiqueta fantasma em branco.
+    O corte por ~DG só serve para arquivos que não têm ^XA nenhum.
     """
-    if "~DG" in content:
-        # Cada etiqueta com imagem embutida começa com ~DG
-        parts = re.split(r"(?=~DG)", content)
-    elif "^XA" in content:
-        # ZPL sem imagem embutida: cada etiqueta começa com ^XA
+    if "^XA" in content:
         parts = re.split(r"(?=\^XA)", content)
+    elif "~DG" in content:
+        parts = re.split(r"(?=~DG)", content)
     else:
         parts = [content]
 
