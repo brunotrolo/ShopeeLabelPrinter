@@ -30,9 +30,11 @@ dependencies = []
 dev = [
     "pytest>=7.0",
     "pytest-cov>=4.0",
-    "pyinstaller>=5.0",
     "mypy>=1.0",
     "ruff>=0.1",
+]
+build = [
+    "pyinstaller>=5.0",
 ]
 
 [project.urls]
