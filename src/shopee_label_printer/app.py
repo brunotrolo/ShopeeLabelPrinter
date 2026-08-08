@@ -511,35 +511,24 @@ class ShopeePrintApp(tk.Tk):
 
         new_count = 0
         try:
-            supported_ext = {".zpl", ".tspl", ".txt", ".prn"}
+            supported_ext = {".zpl", ".tspl", ".txt", ".prn", ".zip"}
 
-            # Listar arquivos com padrão Shopee (prioridade)
-            pattern_files = list(downloads.glob("Etiqueta de Envio ZPL*.*"))
-            zpl_files = [
-                f for f in pattern_files
+            # Procurar por todos os arquivos suportados (prioridade: .zip da Shopee)
+            all_files = list(downloads.glob("*.*"))
+            candidate_files = [
+                f for f in all_files
                 if f.suffix.lower() in supported_ext and f.is_file()
             ]
 
-            # Se não encontrou com padrão Shopee, procura todos com extensão suportada
-            if not zpl_files:
-                all_files = list(downloads.glob("*.*"))
-                zpl_files = [
-                    f for f in all_files
-                    if f.suffix.lower() in supported_ext and f.is_file()
-                ]
-                if zpl_files:
-                    self._log(f"💡 Nenhum arquivo com padrão 'Etiqueta de Envio ZPL', encontrados {len(zpl_files)} arquivo(s) com extensão suportada")
-
-            # Log de debug: mostrar quantos arquivos encontrou
-            if zpl_files:
-                self._log(f"🔍 Auto-import: encontrados {len(zpl_files)} arquivo(s) candidato(s)")
+            if candidate_files:
+                self._log(f"🔍 Auto-import: encontrados {len(candidate_files)} arquivo(s) candidato(s)")
 
             # Carregar hashes conhecidos
             known_files = set(Config.get("auto_import_loaded_files", []))
 
             # Detectar novos arquivos
             new_files: list[Path] = []
-            for filepath in zpl_files:
+            for filepath in candidate_files:
                 file_hash = str(filepath.resolve())
                 if file_hash not in known_files:
                     new_files.append(filepath)
