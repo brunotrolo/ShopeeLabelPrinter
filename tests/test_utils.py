@@ -53,12 +53,12 @@ class TestFormatPrintSummary:
 
     def test_all_failures(self):
         """Testa quando tudo falha."""
-        title, msg = format_print_summary(0, 5)
+        _title, msg = format_print_summary(0, 5)
         assert "5" in msg
 
     def test_none_selected(self):
         """Testa quando nenhuma etiqueta é selecionada."""
-        title, msg = format_print_summary(0, 0)
+        title, _msg = format_print_summary(0, 0)
         assert "Nenhuma" in title
 
 

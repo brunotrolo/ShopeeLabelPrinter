@@ -267,9 +267,10 @@ class TestLoadLabelsFromPath:
 
     def test_load_empty_folder(self):
         """Testa com pasta vazia."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            with pytest.raises(ParserError, match="Nenhuma etiqueta encontrada"):
-                load_labels_from_path(tmpdir)
+        with tempfile.TemporaryDirectory() as tmpdir, pytest.raises(
+            ParserError, match="Nenhuma etiqueta encontrada"
+        ):
+            load_labels_from_path(tmpdir)
 
     def test_load_multiple_labels_in_file(self):
         """Testa carregamento de múltiplas etiquetas no mesmo arquivo."""

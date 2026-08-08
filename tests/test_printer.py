@@ -142,11 +142,13 @@ class TestSendRawToPrinter:
 
     def test_error_handling(self):
         """Testa tratamento de erros genéricos."""
-        with patch('src.shopee_label_printer.printer._send_raw_windows') as mock_send:
+        with (
+            patch("src.shopee_label_printer.printer._send_raw_windows") as mock_send,
+            patch("src.shopee_label_printer.printer.IS_WINDOWS", True),
+            pytest.raises(PrinterError, match="Erro ao enviar"),
+        ):
             mock_send.side_effect = Exception("Connection failed")
-            with patch('src.shopee_label_printer.printer.IS_WINDOWS', True):
-                with pytest.raises(PrinterError, match="Erro ao enviar"):
-                    send_raw_to_printer("Printer1", b"data")
+            send_raw_to_printer("Printer1", b"data")
 
 
 class TestApplyPrintBoost:
