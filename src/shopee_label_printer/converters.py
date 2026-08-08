@@ -17,6 +17,7 @@ o PDF é montado a mão, objeto por objeto, comprimindo o bitmap com zlib
 
 import logging
 import zlib
+from typing import Any, Callable
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +27,7 @@ class ConversionError(Exception):
     pass
 
 
-def _render_or_raise(zpl_data: bytes, renderer_func):
+def _render_or_raise(zpl_data: bytes, renderer_func: Callable[[bytes], Any]) -> Any:
     """
     Renderiza o ZPL e recusa etiquetas que dependem de elementos vetoriais
     (texto/caixa/código desenhados por cima, não embutidos no bitmap).
@@ -55,7 +56,7 @@ def _render_or_raise(zpl_data: bytes, renderer_func):
     return render
 
 
-def _pack_bitmap(render) -> tuple[bytes, int, int]:
+def _pack_bitmap(render: Any) -> tuple[bytes, int, int]:
     """
     Empacota render.pixels (1 byte por pixel, 1 = preto) em bits MSB-first,
     uma linha começando sempre num byte novo — formato binário que tanto o
@@ -104,10 +105,10 @@ TSPL_BOOST_LEVELS = {
 
 def zpl_to_tspl(
     zpl_data: bytes,
-    renderer_func,
+    renderer_func: Callable[[bytes], Any],
     boost_level: str = "desligado",
-    custom_density: int = None,
-    custom_speed: int = None,
+    custom_density: int | None = None,
+    custom_speed: int | None = None,
 ) -> bytes:
     """
     Converte ZPL para TSPL, desenhando o bitmap decodificado com o comando
@@ -153,10 +154,13 @@ def zpl_to_tspl(
                 raise ConversionError(
                     f"custom_speed deve ser positivo, recebido: {custom_speed}"
                 )
-            density, speed = custom_density, custom_speed
+            density: int | None = custom_density
+            speed: int | None = custom_speed
             logger.info("Usando parâmetros customizados: density=%s, speed=%s", density, speed)
         else:
-            density, speed = TSPL_BOOST_LEVELS.get(boost_level, (None, None))
+            density_val, speed_val = TSPL_BOOST_LEVELS.get(boost_level, (None, None))
+            density = density_val
+            speed = speed_val
             logger.info("Usando preset de reforço: %s", boost_level)
 
         boost_commands = ""
@@ -185,8 +189,9 @@ def zpl_to_tspl(
         raise ConversionError(f"Erro ao converter ZPL para TSPL: {str(e)}")
 
 
-def _build_pdf(width_mm: float, height_mm: float, width_px: int, height_px: int,
-                packed_bits: bytes) -> bytes:
+def _build_pdf(
+    width_mm: float, height_mm: float, width_px: int, height_px: int, packed_bits: bytes
+) -> bytes:
     """
     Monta um PDF de uma página só, com uma imagem 1-bit (DeviceGray) ocupando
     a página inteira — sem biblioteca nenhuma, só a estrutura do formato PDF
@@ -251,7 +256,7 @@ def _build_pdf(width_mm: float, height_mm: float, width_px: int, height_px: int,
     return bytes(out)
 
 
-def zpl_to_pdf(zpl_data: bytes, renderer_func, output_path: str = None) -> bytes:
+def zpl_to_pdf(zpl_data: bytes, renderer_func: Callable[[bytes], Any], output_path: str | None = None) -> bytes:
     """
     Converte ZPL para PDF no tamanho físico exato da etiqueta.
 

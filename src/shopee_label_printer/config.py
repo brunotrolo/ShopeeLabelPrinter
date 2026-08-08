@@ -14,7 +14,8 @@ logger = logging.getLogger(__name__)
 def _get_config_dir() -> Path:
     """Obter diretório de configuração."""
     if os.name == 'nt':  # Windows
-        config_dir = Path(os.getenv('APPDATA')) / 'ShopeeLabelPrinter'
+        appdata = os.getenv('APPDATA') or str(Path.home())
+        config_dir = Path(appdata) / 'ShopeeLabelPrinter'
     else:  # macOS/Linux
         config_dir = Path.home() / '.config' / 'shopee_label_printer'
 
@@ -26,7 +27,7 @@ class Config:
     """Gerencia configurações da aplicação."""
 
     _config_file = _get_config_dir() / 'settings.json'
-    _defaults = {
+    _defaults: dict[str, Any] = {
         'last_printer': None,
         'remember_printer': True,
         'auto_detect_thermal': True,

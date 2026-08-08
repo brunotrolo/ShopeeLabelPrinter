@@ -374,22 +374,22 @@ def render_zpl(
             max_y = max(max_y, cur_y + box_h)
 
         elif command in ("^FD", "^FV"):
-            value = params
+            text_value: str = params
             if pending is not None:
-                pending.data = value
+                pending.data = text_value
                 if pending.kind == "barcode":
-                    pending.modules = encode_code128(value)
+                    pending.modules = encode_code128(text_value)
                 overlays.append(pending)
                 max_x = max(max_x, pending.x + len(pending.modules) * pending.thickness)
                 max_y = max(max_y, pending.y + pending.height)
                 pending = None
-            elif value.strip():
+            elif text_value.strip():
                 overlays.append(
                     Overlay(
                         kind="text",
                         x=cur_x,
                         y=cur_y,
-                        data=value,
+                        data=text_value,
                         font_height=font_h,
                         font_width=font_w or int(font_h * 0.6),
                         inverted=inverted,

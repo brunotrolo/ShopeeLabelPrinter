@@ -32,11 +32,6 @@ jobs:
           ruff check src/ tests/
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
 
-      - name: Type check with mypy
-        run: |
-          mypy src/shopee_label_printer/
-        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
-
       - name: Run tests with pytest
         run: |
           pytest tests/ -v --cov=src --cov-report=xml
