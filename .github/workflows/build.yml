@@ -1,0 +1,49 @@
+name: Build Executável
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller
+
+      - name: Build executável
+        run: |
+          pyinstaller --onefile --windowed `
+            --name "ShopeeLabelPrinter" `
+            --icon=src/shopee_label_printer/assets/icon.ico `
+            --version-file=file_version_info.txt `
+            src/shopee_label_printer/__main__.py
+
+      - name: Test executável
+        run: |
+          if (Test-Path "dist/ShopeeLabelPrinter.exe") {
+            Write-Host "✓ Executável criado com sucesso"
+          } else {
+            throw "Executável não foi criado"
+          }
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/ShopeeLabelPrinter.exe
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
