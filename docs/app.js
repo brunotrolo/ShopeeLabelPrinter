@@ -47,7 +47,7 @@
       "dropzone", "file-input", "status", "label-list", "label-panel",
       "preview-canvas", "preview-stage", "preview-empty", "preview-meta",
       "zoom", "btn-print", "btn-png", "btn-download", "print-area", "print-size",
-      "label-count", "boost", "mode",
+      "label-count", "boost", "mode", "theme-toggle",
     ].forEach((id) => {
       els[id.replace(/-(\w)/g, (_, c) => c.toUpperCase())] = $(id);
     });
@@ -111,6 +111,8 @@
     els.mode.value = "tspl";
     updateDownloadButtonLabel();
     updateCustomBoostUI();
+
+    initThemeToggle();
 
     window.addEventListener("resize", () => {
       if (currentRender && els.zoom.value === "fit") applyZoom();
@@ -410,6 +412,38 @@
     const div = document.createElement("div");
     div.textContent = text;
     return div.innerHTML;
+  }
+
+  function initThemeToggle() {
+    const savedTheme = localStorage.getItem("theme-preference") || "system";
+    applyTheme(savedTheme);
+    els.themeToggle.addEventListener("click", cycleTheme);
+  }
+
+  function applyTheme(theme) {
+    const html = document.documentElement;
+
+    if (theme === "light") {
+      html.setAttribute("data-theme", "light");
+      els.themeToggle.textContent = "☀️";
+      els.themeToggle.title = "Modo escuro";
+    } else if (theme === "dark") {
+      html.setAttribute("data-theme", "dark");
+      els.themeToggle.textContent = "🌙";
+      els.themeToggle.title = "Modo automático";
+    } else {
+      html.removeAttribute("data-theme");
+      els.themeToggle.textContent = "🔄";
+      els.themeToggle.title = "Modo claro";
+    }
+
+    localStorage.setItem("theme-preference", theme);
+  }
+
+  function cycleTheme() {
+    const current = localStorage.getItem("theme-preference") || "system";
+    const next = current === "system" ? "light" : current === "light" ? "dark" : "system";
+    applyTheme(next);
   }
 
   document.addEventListener("DOMContentLoaded", init);
