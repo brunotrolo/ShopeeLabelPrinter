@@ -36,10 +36,11 @@ ZOOM_LEVELS = [
 # Reforço de impressão: mais calor e menos velocidade, para traço fino sair
 # cheio. Só age quando o usuário escolhe — o padrão envia os bytes intactos.
 BOOST_CHOICES = [
-    ("Desligado (bytes originais)", "desligado"),
     ("Leve — traço mais firme", "leve"),
     ("Médio — traço bem escuro", "medio"),
     ("Forte — pode borrar o código", "forte"),
+    ("Customizado", "customizado"),
+    ("Desligado (bytes originais)", "desligado"),
 ]
 
 # Modos de saída: permite escolher entre ZPL nativo, TSPL (para FY-1075) ou PDF
@@ -127,19 +128,25 @@ class ShopeePrintApp(tk.Tk):
         boost_row = ttk.Frame(printer_frame)
         boost_row.pack(fill="x", pady=(8, 0))
         ttk.Label(boost_row, text="Reforço:").pack(side="left")
-        self.boost_var = tk.StringVar(value=BOOST_CHOICES[0][0])
-        ttk.Combobox(
+        self.boost_var = tk.StringVar(value="Leve — traço mais firme")
+        self.boost_combo = ttk.Combobox(
             boost_row,
             textvariable=self.boost_var,
             state="readonly",
             width=26,
             values=[label for label, _ in BOOST_CHOICES],
-        ).pack(side="left", padx=6)
+        )
+        self.boost_combo.pack(side="left", padx=6)
+        self.boost_combo.bind("<<ComboboxSelected>>", self._on_boost_changed)
+
+        self.custom_frame = ttk.Frame(printer_frame)
+        self.custom_frame.pack(fill="x", pady=(8, 0))
+        self._update_custom_ui()
 
         mode_row = ttk.Frame(printer_frame)
         mode_row.pack(fill="x", pady=(8, 0))
         ttk.Label(mode_row, text="Modo:").pack(side="left")
-        self.mode_var = tk.StringVar(value=MODE_CHOICES[0][0])
+        self.mode_var = tk.StringVar(value="TSPL (FY-1075, compatível)")
         ttk.Combobox(
             mode_row,
             textvariable=self.mode_var,
@@ -269,6 +276,65 @@ class ShopeePrintApp(tk.Tk):
             return
 
         self._draw_preview()
+
+    def _on_boost_changed(self, _event=None):
+        """Atualiza a UI de customizado quando o boost é alterado."""
+        self._update_custom_ui()
+
+    def _update_custom_ui(self):
+        """Mostra/esconde UI de customizado conforme a seleção."""
+        for widget in self.custom_frame.winfo_children():
+            widget.destroy()
+
+        boost_label = self.boost_var.get()
+        if "Customizado" in boost_label:
+            # Mostra controles de DENSITY e SPEED
+            ttk.Label(self.custom_frame, text="DENSITY (0-15):").pack(side="left", padx=(6, 4))
+            self.custom_density_var = tk.IntVar(value=12)
+            ttk.Scale(
+                self.custom_frame,
+                from_=0,
+                to=15,
+                orient="horizontal",
+                variable=self.custom_density_var,
+                length=100,
+            ).pack(side="left", padx=(0, 4))
+            ttk.Label(self.custom_frame, text=self.custom_density_var.get()).pack(side="left", padx=(0, 12))
+
+            ttk.Label(self.custom_frame, text="SPEED (pol/s):").pack(side="left", padx=(0, 4))
+            self.custom_speed_var = tk.IntVar(value=2)
+            ttk.Scale(
+                self.custom_frame,
+                from_=1,
+                to=4,
+                orient="horizontal",
+                variable=self.custom_speed_var,
+                length=100,
+            ).pack(side="left", padx=(0, 4))
+            ttk.Label(self.custom_frame, text=self.custom_speed_var.get()).pack(side="left", padx=(0, 12))
+
+            # Info sobre o que significa
+            info_text = (
+                "Aumentar DENSITY = mais escuro | Aumentar SPEED = mais rápido (menos escuro)"
+            )
+            ttk.Label(self.custom_frame, text=info_text, foreground="gray").pack(
+                side="left", padx=6
+            )
+        else:
+            # Mostra explicação sobre DENSITY e SPEED quando não é customizado
+            self.custom_density_var = None
+            self.custom_speed_var = None
+
+    def _get_boost_level(self) -> str:
+        """Retorna o nível de boost selecionado ou 'customizado' com valores."""
+        boost_label = self.boost_var.get()
+        boost_value = dict((label, value) for label, value in BOOST_CHOICES)[boost_label]
+
+        if boost_value == "customizado":
+            if hasattr(self, "custom_density_var") and self.custom_density_var:
+                # Retorna uma tupla que será tratada diferente
+                return (self.custom_density_var.get(), self.custom_speed_var.get())
+        return boost_value
 
     def _fit_factor(self, render) -> int:
         """Menor fator inteiro que faz a etiqueta caber na área visível."""
@@ -420,7 +486,7 @@ class ShopeePrintApp(tk.Tk):
             return
 
         mode = dict(MODE_CHOICES)[self.mode_var.get()]
-        boost = dict(BOOST_CHOICES)[self.boost_var.get()]
+        boost = self._get_boost_level()
 
         # Modo PDF salva em arquivo, não imprime — reforço não se aplica a
         # um arquivo estático.
@@ -434,8 +500,9 @@ class ShopeePrintApp(tk.Tk):
             self._log("⚠️  Impressora não selecionada")
             return
 
-        if boost != "desligado":
-            self._log(f"⚙️  Reforço de impressão: {boost} (altera os bytes enviados)")
+        boost_label = "customizado" if isinstance(boost, tuple) else boost
+        if boost_label != "desligado":
+            self._log(f"⚙️  Reforço de impressão: {boost_label} (altera os bytes enviados)")
 
         if mode != "zpl":
             self._log(f"⚙️  Modo de impressão: {mode.upper()}")
@@ -448,9 +515,16 @@ class ShopeePrintApp(tk.Tk):
                 # só existem em ZPL, por isso o reforço do TSPL entra dentro da
                 # própria conversão, como DENSITY/SPEED.
                 if mode == "tspl":
-                    data = zpl_to_tspl(data, render_zpl, boost_level=boost)
+                    if isinstance(boost, tuple):
+                        # Customizado: boost é (density, speed)
+                        # Precisa converter para o formato esperado por zpl_to_tspl
+                        # que usa strings de chaves em TSPL_BOOST_LEVELS
+                        # Vamos adicionar suporte customizado direto em converters.py
+                        data = zpl_to_tspl(data, render_zpl, boost_level="customizado", custom_density=boost[0], custom_speed=boost[1])
+                    else:
+                        data = zpl_to_tspl(data, render_zpl, boost_level=boost)
                     name = name.replace(".txt", ".tspl").replace(".zpl", ".tspl")
-                elif boost != "desligado":
+                elif boost != "desligado" and not isinstance(boost, tuple):
                     data = apply_print_boost(data, boost)
 
                 send_raw_to_printer(printer, data, job_name=name)

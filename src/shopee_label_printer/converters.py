@@ -96,13 +96,19 @@ def _invert_bitmap(bitmap_bytes: bytes) -> bytes:
 # não dá pra reaproveitar apply_print_boost() depois de converter.
 TSPL_BOOST_LEVELS = {
     "desligado": (None, None),
-    "leve": (10, 3),
-    "medio": (12, 2),
-    "forte": (15, 2),
+    "leve": (12, 2),
+    "medio": (15, 2),
+    "forte": (15, 1),
 }
 
 
-def zpl_to_tspl(zpl_data: bytes, renderer_func, boost_level: str = "desligado") -> bytes:
+def zpl_to_tspl(
+    zpl_data: bytes,
+    renderer_func,
+    boost_level: str = "desligado",
+    custom_density: int = None,
+    custom_speed: int = None,
+) -> bytes:
     """
     Converte ZPL para TSPL, desenhando o bitmap decodificado com o comando
     BITMAP (TSPL/TSPL2 Programming Manual, TSC): sintaxe
@@ -116,7 +122,9 @@ def zpl_to_tspl(zpl_data: bytes, renderer_func, boost_level: str = "desligado") 
     Args:
         zpl_data: Bytes da etiqueta em ZPL
         renderer_func: render_zpl(data) -> LabelRender
-        boost_level: uma das chaves de TSPL_BOOST_LEVELS
+        boost_level: uma das chaves de TSPL_BOOST_LEVELS ou "customizado"
+        custom_density: DENSITY (0-15) quando boost_level="customizado"
+        custom_speed: SPEED (pol/s) quando boost_level="customizado"
 
     Returns:
         Bytes da etiqueta em TSPL, prontos para envio RAW
@@ -129,7 +137,11 @@ def zpl_to_tspl(zpl_data: bytes, renderer_func, boost_level: str = "desligado") 
         bitmap_bytes, width_bytes, height_dots = _pack_bitmap(render)
         bitmap_bytes = _invert_bitmap(bitmap_bytes)
 
-        density, speed = TSPL_BOOST_LEVELS.get(boost_level, (None, None))
+        if boost_level == "customizado":
+            density, speed = custom_density, custom_speed
+        else:
+            density, speed = TSPL_BOOST_LEVELS.get(boost_level, (None, None))
+
         boost_commands = ""
         if speed is not None:
             boost_commands += f"SPEED {speed}\r\n"

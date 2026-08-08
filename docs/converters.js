@@ -57,9 +57,9 @@
   // Mesmos níveis do lado Python (converters.py TSPL_BOOST_LEVELS).
   const TSPL_BOOST_LEVELS = {
     desligado: [null, null],
-    leve: [10, 3],
-    medio: [12, 2],
-    forte: [15, 2],
+    leve: [12, 2],
+    medio: [15, 2],
+    forte: [15, 1],
   };
 
   /**
@@ -69,12 +69,19 @@
    * Nota: TSPL usa polaridade oposta (0=preto, 1=branco), então o bitmap
    * é invertido automaticamente antes do envio.
    */
-  async function zplToTspl(render, boostLevel) {
+  async function zplToTspl(render, boostLevel, customDensity = null, customSpeed = null) {
     rejectIfHasOverlays(render);
     let { packed, bytesPerRow, height } = packBitmap(render);
     packed = invertBitmap(packed);
 
-    const [density, speed] = TSPL_BOOST_LEVELS[boostLevel] || [null, null];
+    let density, speed;
+    if (boostLevel === "customizado") {
+      density = customDensity;
+      speed = customSpeed;
+    } else {
+      [density, speed] = TSPL_BOOST_LEVELS[boostLevel] || [null, null];
+    }
+
     let boostCommands = "";
     if (speed !== null) boostCommands += `SPEED ${speed}\r\n`;
     if (density !== null) boostCommands += `DENSITY ${density}\r\n`;

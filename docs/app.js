@@ -19,10 +19,11 @@
   // Mesmos níveis da versão desktop. Vale só para o ZPL baixado — ver a nota
   // em applyPrintBoost (zpl.js).
   const BOOST_CHOICES = [
-    { label: "Desligado", value: "desligado" },
-    { label: "Leve", value: "leve" },
-    { label: "Médio", value: "medio" },
-    { label: "Forte", value: "forte" },
+    { label: "Leve — traço mais firme", value: "leve" },
+    { label: "Médio — traço bem escuro", value: "medio" },
+    { label: "Forte — pode borrar o código", value: "forte" },
+    { label: "Customizado", value: "customizado" },
+    { label: "Desligado (bytes originais)", value: "desligado" },
   ];
 
   // Modos de saída — igual ao desktop
@@ -105,7 +106,11 @@
     els.btnPng.addEventListener("click", downloadPng);
     els.btnDownload.addEventListener("click", downloadInSelectedMode);
     els.mode.addEventListener("change", updateDownloadButtonLabel);
+    els.boost.addEventListener("change", updateCustomBoostUI);
+    els.boost.value = "leve";
+    els.mode.value = "tspl";
     updateDownloadButtonLabel();
+    updateCustomBoostUI();
 
     window.addEventListener("resize", () => {
       if (currentRender && els.zoom.value === "fit") applyZoom();
@@ -136,6 +141,48 @@
   function updateDownloadButtonLabel() {
     const labels = { zpl: "📄 Baixar ZPL", tspl: "📄 Baixar TSPL", pdf: "📄 Baixar PDF" };
     els.btnDownload.textContent = labels[els.mode.value] || labels.zpl;
+  }
+
+  function updateCustomBoostUI() {
+    let customUI = document.getElementById("custom-boost-ui");
+    if (els.boost.value === "customizado") {
+      if (!customUI) {
+        customUI = document.createElement("div");
+        customUI.id = "custom-boost-ui";
+        customUI.style.marginTop = "8px";
+        customUI.style.padding = "8px";
+        customUI.style.backgroundColor = "#f8f9fa";
+        customUI.style.borderRadius = "4px";
+        customUI.style.fontSize = "12px";
+        customUI.innerHTML = `
+          <div style="margin-bottom: 8px; font-weight: bold;">⚙️ Ajuste Personalizado</div>
+          <div style="margin-bottom: 6px;">
+            DENSITY (0-15):
+            <input type="range" id="custom-density" min="0" max="15" value="12" style="width: 120px; vertical-align: middle;">
+            <span id="density-value" style="margin-left: 8px;">12</span>
+          </div>
+          <div style="margin-bottom: 6px;">
+            SPEED (pol/s):
+            <input type="range" id="custom-speed" min="1" max="4" value="2" style="width: 120px; vertical-align: middle;">
+            <span id="speed-value" style="margin-left: 8px;">2</span>
+          </div>
+          <div style="font-size: 11px; color: #666; margin-top: 8px; line-height: 1.4;">
+            <strong>DENSITY:</strong> Aumentar = mais escuro | Diminuir = mais claro<br>
+            <strong>SPEED:</strong> Aumentar = mais rápido (menos escuro) | Diminuir = mais lento (mais escuro)
+          </div>
+        `;
+        els.boost.parentElement.parentElement.insertBefore(customUI, els.boost.parentElement.nextSibling);
+
+        document.getElementById("custom-density").addEventListener("input", (e) => {
+          document.getElementById("density-value").textContent = e.target.value;
+        });
+        document.getElementById("custom-speed").addEventListener("input", (e) => {
+          document.getElementById("speed-value").textContent = e.target.value;
+        });
+      }
+    } else if (customUI) {
+      customUI.remove();
+    }
   }
 
   // -- importação ----------------------------------------------------------
@@ -299,8 +346,23 @@
 
   async function downloadTspl() {
     const level = els.boost.value;
-    const data = await window.LabelConverters.zplToTspl(currentRender, level);
-    const suffix = level === "desligado" ? "" : `-reforco-${level}`;
+    let data;
+    let suffix = level === "desligado" ? "" : `-reforco-${level}`;
+
+    if (level === "customizado") {
+      const density = parseInt(document.getElementById("custom-density").value);
+      const speed = parseInt(document.getElementById("custom-speed").value);
+      data = await window.LabelConverters.zplToTspl(
+        currentRender,
+        level,
+        density,
+        speed
+      );
+      suffix = `-custom-d${density}-s${speed}`;
+    } else {
+      data = await window.LabelConverters.zplToTspl(currentRender, level);
+    }
+
     saveBlob(
       new Blob([data], { type: "application/octet-stream" }),
       currentLabelName() + suffix + ".tspl"
