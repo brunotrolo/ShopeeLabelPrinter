@@ -146,10 +146,9 @@ Shopee-Label-Print/
 │   └── style.css
 ├── README.md                    # This file
 ├── LEIA-ME.md                   # Portuguese guide
-├── PLANO_DESENVOLVIMENTO.md     # Technical roadmap (5 phases)
 ├── CHANGELOG.md                 # Version history
 ├── LICENSE                      # MIT License
-└── ShopeeLabelPrinter.spec      # PyInstaller config
+└── run_app.py                   # Entry point for PyInstaller
 ```
 
 ---
@@ -171,7 +170,7 @@ pytest tests/
 **Option 2: Manual with PyInstaller**
 ```bash
 pip install pyinstaller
-pyinstaller ShopeeLabelPrinter.spec --onefile --windowed
+pyinstaller run_app.py --onefile --windowed --name ShopeeLabelPrinter
 # Output: dist/ShopeeLabelPrinter.exe
 ```
 
