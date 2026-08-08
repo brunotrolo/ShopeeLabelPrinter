@@ -631,14 +631,22 @@ class ShopeePrintApp(tk.Tk):
         )
 
     def _show_log_dir(self):
+        import subprocess
+        import platform
         from .logger import _get_log_dir
 
         log_dir = _get_log_dir()
-        if os.name == "nt":
-            os.startfile(str(log_dir))  # noqa: S606
-        else:
-            os.system(f"open '{log_dir}'")  # noqa: S605
-        self._log(f"Abrindo: {log_dir}")
+        try:
+            if os.name == "nt":
+                os.startfile(str(log_dir))  # noqa: S606
+            elif platform.system() == "Darwin":
+                subprocess.run(["open", str(log_dir)], check=True)
+            else:
+                subprocess.run(["xdg-open", str(log_dir)], check=True)
+            self._log(f"Abrindo: {log_dir}")
+        except Exception as e:
+            self._log(f"Erro ao abrir pasta: {e}")
+            messagebox.showerror("Erro", f"Não foi possível abrir a pasta: {e}")
 
 
 def main():
