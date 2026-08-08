@@ -24,11 +24,15 @@ jobs:
 
       - name: Build executável
         run: |
-          pyinstaller --onefile --windowed `
-            --name "ShopeeLabelPrinter" `
-            --icon=src/shopee_label_printer/assets/icon.ico `
-            --version-file=file_version_info.txt `
-            src/shopee_label_printer/__main__.py
+          $args = @("--onefile", "--windowed", "--name", "ShopeeLabelPrinter")
+          if (Test-Path "src/shopee_label_printer/assets/icon.ico") {
+            $args += @("--icon=src/shopee_label_printer/assets/icon.ico")
+          }
+          if (Test-Path "file_version_info.txt") {
+            $args += @("--version-file=file_version_info.txt")
+          }
+          $args += "src/shopee_label_printer/__main__.py"
+          pyinstaller @args
 
       - name: Test executável
         run: |
