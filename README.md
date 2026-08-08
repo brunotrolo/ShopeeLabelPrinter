@@ -76,10 +76,30 @@ Serve para testar. O arquivo fica guardado por 90 dias na página da execução.
 `releases/latest/download/ShopeeLabelPrinter.exe`.
 
 1. Vá em **[Releases](https://github.com/brunotrolo/Shopee_Printer/releases)** → **Create a new release**
-2. Em **Choose a tag**, digite `v1.0.0` e clique em **Create new tag: v1.0.0 on publish**
-3. Em **Release title**, escreva `v1.0.0`
+2. Em **Choose a tag**, digite a versão atual do projeto — hoje `v0.3.1`
+   (veja em `__init__.py`) — e clique em **Create new tag: v0.3.1 on publish**
+3. Em **Release title**, escreva `v0.3.1`
 4. Clique em **Publish release**
 5. Isso dispara o build sozinho; em uns minutos o `.exe` aparece anexado à Release
+
+> A tag deve bater com a versão do pacote. O `v1.0.0` está reservado para
+> depois do teste de impressão na FY-1075 real — enquanto isso não acontecer,
+> chamar de 1.0.0 seria dizer que está pronto sem ninguém ter conferido.
+
+#### ⚠️ Se você apagar uma Release e criar de novo
+
+**Apagar a Release não apaga a tag.** Ao recriar reaproveitando a tag que
+sobrou, o GitHub não dispara evento de tag nova — antigamente o build não
+rodava e a Release ficava publicada sem o `.exe`. O workflow hoje também
+reage a `release: published`, então isso já está resolvido.
+
+Mas atenção a outra coisa: **a tag continua apontando para o commit antigo**.
+Se houve correções depois dela, o `.exe` sai com o código velho. Para pegar o
+código atual, apague também a tag e use uma versão nova:
+
+1. **Code** → **Tags** → aba de tags → apague a tag antiga
+2. Crie a Release com uma tag nova (ex: `v0.3.2`), que nasce apontando para o
+   topo da `main`
 
 > **Windows vai avisar "editor desconhecido"** na primeira execução — é esperado,
 > porque o `.exe` não tem assinatura digital paga. Clique em
