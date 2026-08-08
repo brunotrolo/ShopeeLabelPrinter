@@ -89,86 +89,33 @@
       </div>
 
       <div class="note">
-        <strong>Impressão pelo navegador passa pelo driver do Windows.</strong>
-        O navegador não consegue enviar bytes RAW para a impressora — essa é uma limitação
-        dele, não do projeto. Para imprimir <em>sem nenhuma perda de resolução</em>,
-        use a versão desktop, que fala direto com a impressora. Aqui a página já sai no
-        tamanho físico exato (100 × 150 mm), o que costuma ficar bom, mas passa por
-        rasterização do driver.
-      </div>
-
-      <div class="note">
-        <strong>Traço fino ou falhado?</strong>
-        Imprimindo <em>pelo navegador</em>, o escurecimento não vem daqui: ajuste em
-        <em>Painel de Controle → Dispositivos e Impressoras → botão direito na impressora
-        → Preferências de impressão</em>, na opção de <em>densidade</em> ou
-        <em>darkness</em>. Nesse caminho a impressora recebe uma imagem, e comando ZPL
-        nenhum chega até ela.
-        <br><br>
-        O seletor <strong>Modo de saída</strong> acima escolhe o formato do arquivo baixado:
-        <strong>ZPL</strong> (nativo, para impressoras Zebra ou já em modo ZPL),
-        <strong>TSPL</strong> (para a FY-1075 e outras que só entendem TSPL — descubra qual é
-        a sua com o botão <em>🔧 Testar</em> da versão desktop) ou <strong>PDF</strong>
-        (para guardar ou imprimir por outro caminho). Os três vêm do mesmo bitmap do preview.
-        <br><br>
-        O <strong>Reforço</strong> vale só para o arquivo baixado em ZPL ou TSPL — ele
-        acrescenta comandos de calor e velocidade (<code>^MD</code>/<code>^PR</code> em ZPL,
-        <code>DENSITY</code>/<code>SPEED</code> em TSPL) para quem for imprimir esse arquivo
-        pela versão desktop. Se o código de barras parar de ser lido pelo celular, baixe um
-        nível: calor demais faz as barras engordarem e colarem. Não se aplica ao PDF.
+        <strong>Web imprime via driver do sistema;</strong> desktop envia RAW direto à impressora.
+        Use a web para preview e testes, desktop para máxima qualidade na FY-1075.
       </div>
     </section>
   </div>
 
   <!-- comparação entre as duas versões -->
   <section class="info-section">
-    <h2>Duas versões, mesmo núcleo</h2>
-    <p style="font-size:.9rem; color:var(--text-muted); max-width:70ch;">
-      As duas leem o ZIP, separam as etiquetas e decodificam o bitmap embutido com
-      exatamente o mesmo algoritmo — o preview é idêntico nas duas. A diferença está
-      só em como cada uma chega até a impressora.
-    </p>
-
+    <h2>Duas versões</h2>
     <div class="table-scroll">
       <table class="compare">
         <thead>
           <tr>
-            <th>Recurso</th>
+            <th></th>
             <th>💻 Desktop (.exe)</th>
-            <th>🌐 Web (esta página)</th>
+            <th>🌐 Web</th>
           </tr>
         </thead>
         <tbody>
-          <tr><td>Importar ZIP / pasta / TXT</td><td class="yes">✓ Sim</td><td class="yes">✓ Sim (ZIP e arquivos)</td></tr>
-          <tr><td>Separar etiquetas concatenadas</td><td class="yes">✓ Sim</td><td class="yes">✓ Sim</td></tr>
-          <tr><td>Preview em 203 DPI</td><td class="yes">✓ Sim</td><td class="yes">✓ Sim</td></tr>
-          <tr><td><strong>Envio RAW (resolução máxima)</strong></td><td class="yes">✓ Sim</td><td class="no">✗ O navegador não permite</td></tr>
-          <tr><td>Impressão via driver do sistema</td><td class="no">— não usa</td><td class="yes">✓ Sim, em 100 × 150 mm</td></tr>
-          <tr><td>Imprimir várias de uma vez</td><td class="yes">✓ Sim</td><td class="no">✗ Uma por vez</td></tr>
-          <tr><td>Escolher modo: ZPL / TSPL / PDF</td><td class="yes">✓ Sim</td><td class="yes">✓ Sim</td></tr>
-          <tr><td>Exportar PNG</td><td class="no">—</td><td class="yes">✓ Sim</td></tr>
-          <tr><td>Instalação</td><td>Baixar o .exe</td><td class="yes">✓ Nenhuma</td></tr>
-          <tr><td>Funciona no celular / Mac / Linux</td><td class="no">✗ Windows</td><td class="yes">✓ Qualquer navegador</td></tr>
-          <tr><td>Dados ficam no seu computador</td><td class="yes">✓ Sim</td><td class="yes">✓ Sim</td></tr>
+          <tr><td>Preview 203 DPI</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+          <tr><td><strong>Envio RAW</strong> (máxima qualidade)</td><td class="yes">✓</td><td class="no">✗</td></tr>
+          <tr><td>Imprimir várias de uma vez</td><td class="yes">✓</td><td class="no">—</td></tr>
+          <tr><td>Sem instalação</td><td class="no">—</td><td class="yes">✓</td></tr>
+          <tr><td>Windows / Mac / Linux</td><td class="yes">Windows</td><td class="yes">Qualquer</td></tr>
         </tbody>
       </table>
     </div>
-
-    <p style="font-size:.9rem; margin-top:18px; max-width:70ch;">
-      <strong>Como usar as duas juntas:</strong> confira as etiquetas aqui no navegador —
-      de qualquer aparelho, sem instalar nada — e mande imprimir pela versão desktop
-      quando quiser a fidelidade byte a byte na FY-1075.
-    </p>
-  </section>
-
-  <section class="info-section">
-    <h2>Requisitos</h2>
-    <ul style="font-size:.9rem; max-width:70ch;">
-      <li><strong>Versão web:</strong> Chrome 80+, Edge 80+, Firefox 113+ ou Safari 16.4+
-        (a leitura de ZIP usa <code>DecompressionStream</code>, nativo do navegador).</li>
-      <li><strong>Versão desktop:</strong> Windows 10/11 e uma impressora térmica
-        compatível com TSPL/ZPL a 203 DPI (referência: FY-1075).</li>
-    </ul>
   </section>
 
   <section class="info-section">
