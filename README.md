@@ -1,264 +1,270 @@
-# 🖨️ Shopee Label Printer
+# 🖨️ Shopee Label Print
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 ![Platform: Windows](https://img.shields.io/badge/Platform-Windows%2010%2B-0078d4)
+[![GitHub release](https://img.shields.io/github/release/brunotrolo/Shopee_Printer.svg)](https://github.com/brunotrolo/Shopee_Printer/releases)
 
-**Imprima etiquetas de envio da Shopee direto na sua impressora térmica, sem perder qualidade.**
+**Print Shopee shipping labels directly on your thermal printer with zero quality loss.**
 
-Importa os ZIPs baixados da Shopee, extrai as etiquetas em formato ZPL/TSPL, **mostra o preview de cada uma em 203 DPI** e envia **em modo RAW** (bytes crus) para uma impressora térmica compatível — preservando 100% da resolução original, sem conversão para PDF ou reamostragem.
+A lightweight, zero-dependency tool to import Shopee label ZIPs, decode ZPL/TSPL graphics in real-time, display a pixel-perfect preview at 203 DPI, and send **raw bytes** (RAW mode) to compatible thermal label printers — preserving 100% original resolution with no PDF conversion or resampling.
 
-## 🖥️ Duas versões
+**Available as:** Professional desktop application (.exe), responsive web app, or Python library.
 
-| | 💻 **Desktop** (.exe) | 🌐 **Web** ([abrir](https://brunotrolo.github.io/Shopee_Printer/)) |
-|---|---|---|
-| Importar ZIP / pasta / TXT | ✅ | ✅ |
-| Separar etiquetas concatenadas | ✅ | ✅ |
-| Preview em 203 DPI | ✅ | ✅ |
-| **Envio RAW (resolução máxima)** | ✅ | ❌ o navegador não permite |
-| Impressão pelo driver do sistema | — | ✅ em 100 × 150 mm |
-| Imprimir várias de uma vez | ✅ | ❌ uma por vez |
-| Exportar PNG / ZPL | — | ✅ |
-| Instalação | baixar o .exe | ✅ nenhuma |
-| Mac / Linux / celular | ❌ Windows | ✅ qualquer navegador |
-| Dados ficam no seu computador | ✅ | ✅ |
+## ⚡ Quick Start
 
-As duas compartilham o mesmo algoritmo de decodificação (`renderer.py` e `docs/zpl.js`), então **o preview é idêntico**. A diferença está só em como cada uma chega até a impressora.
+### 🌐 Web Version (No Installation)
+Open **[brunotrolo.github.io/Shopee_Printer](https://brunotrolo.github.io/Shopee_Printer/)**, drag your Shopee ZIP file, and preview instantly. Works in modern browsers: Chrome 80+, Edge 80+, Firefox 113+, Safari 16.4+.
 
-> **Por que a web não imprime em RAW?** Nenhum navegador consegue mandar bytes crus para uma impressora — é uma restrição do sandbox do navegador, não uma limitação deste projeto. A versão web imprime pelo driver do sistema, no tamanho físico exato. Para a fidelidade byte a byte na FY-1075, use a versão desktop.
+### 💻 Desktop Version (.exe)
+1. Download latest `ShopeeLabelPrinter.exe` from [Releases](https://github.com/brunotrolo/Shopee_Printer/releases)
+2. Run the executable (no installation required)
+3. Works on any Windows 10/11 — Python not required
 
-**Fluxo recomendado:** confira as etiquetas no navegador — de qualquer aparelho, sem instalar nada — e mande imprimir pelo desktop.
-
-## 🎯 O que faz
-
-✅ Importar ZIP, pasta ou arquivo TXT/ZPL avulso da Shopee  
-✅ Separar automaticamente múltiplas etiquetas concatenadas no mesmo arquivo  
-✅ **Preview da etiqueta antes de imprimir**, na resolução nativa da impressora  
-✅ Enviar em modo RAW direto para a impressora térmica (não passa por PDF)  
-✅ Rodar 100% localmente — seus dados de endereço nunca são enviados a servidores  
-✅ **Zero dependências externas** — não precisa `pip install` nada além do Python
-
-## ⚡ Início Rápido
-
-### Opção A: Versão web (não instala nada)
-
-Abra **[brunotrolo.github.io/Shopee_Printer](https://brunotrolo.github.io/Shopee_Printer/)**, arraste o ZIP e veja o preview. Funciona em Chrome 80+, Edge 80+, Firefox 113+ e Safari 16.4+.
-
-### Opção B: Usar o .exe standalone (sem Python)
-
-1. Baixe o `ShopeeLabelPrinter.exe` mais recente em [Releases](https://github.com/brunotrolo/Shopee_Printer/releases)
-2. Dê duplo clique no `.exe` — nenhuma instalação necessária
-3. Funciona em qualquer Windows 10/11, com ou sem Python instalado
-
-> ⚠️ **Ainda não há nenhuma Release publicada.** O `.exe` é gerado pelo GitHub
-> Actions — veja [como gerar](#-como-gerar-o-exe) logo abaixo. É de graça e não
-> precisa instalar nada no seu computador.
-
-## 🏗️ Como gerar o .exe
-
-O `.exe` é compilado pelo GitHub, num Windows de verdade — você não precisa ter
-o PyInstaller nem o Python instalados. Há dois jeitos.
-
-### Jeito 1: pelo site, só clicando (mais fácil)
-
-Serve para testar. O arquivo fica guardado por 90 dias na página da execução.
-
-1. Vá em **[Actions](https://github.com/brunotrolo/Shopee_Printer/actions)**
-2. Na coluna da esquerda, clique em **Build Executável**
-3. À direita, clique em **Run workflow** → escolha `main` → **Run workflow**
-4. Espere uns 3–5 minutos (a bolinha fica verde ✓)
-5. Clique na execução e baixe **ShopeeLabelPrinter-exe**, no rodapé da página
-6. É um `.zip` — descompacte e o `.exe` está dentro
-
-### Jeito 2: publicar uma Release (o link permanente)
-
-É isto que faz o botão "Baixar" do site funcionar e cria o link
-`releases/latest/download/ShopeeLabelPrinter.exe`.
-
-1. Vá em **[Releases](https://github.com/brunotrolo/Shopee_Printer/releases)** → **Create a new release**
-2. Em **Choose a tag**, digite a versão atual do projeto — hoje `v0.3.1`
-   (veja em `__init__.py`) — e clique em **Create new tag: v0.3.1 on publish**
-3. Em **Release title**, escreva `v0.3.1`
-4. Clique em **Publish release**
-5. Isso dispara o build sozinho; em uns minutos o `.exe` aparece anexado à Release
-
-> A tag deve bater com a versão do pacote. O `v1.0.0` está reservado para
-> depois do teste de impressão na FY-1075 real — enquanto isso não acontecer,
-> chamar de 1.0.0 seria dizer que está pronto sem ninguém ter conferido.
-
-#### ⚠️ Se você apagar uma Release e criar de novo
-
-**Apagar a Release não apaga a tag.** Ao recriar reaproveitando a tag que
-sobrou, o GitHub não dispara evento de tag nova — antigamente o build não
-rodava e a Release ficava publicada sem o `.exe`. O workflow hoje também
-reage a `release: published`, então isso já está resolvido.
-
-Mas atenção a outra coisa: **a tag continua apontando para o commit antigo**.
-Se houve correções depois dela, o `.exe` sai com o código velho. Para pegar o
-código atual, apague também a tag e use uma versão nova:
-
-1. **Code** → **Tags** → aba de tags → apague a tag antiga
-2. Crie a Release com uma tag nova (ex: `v0.3.2`), que nasce apontando para o
-   topo da `main`
-
-> **Windows vai avisar "editor desconhecido"** na primeira execução — é esperado,
-> porque o `.exe` não tem assinatura digital paga. Clique em
-> **Mais informações → Executar assim mesmo**.
-
-### Opção C: Rodar com Python instalado
-
-1. Instale Python 3.10+: https://www.python.org/downloads/
-   - Na instalação, marque **"Add Python to PATH"**
-2. Clone o repositório ou baixe como ZIP
-3. Abra o terminal/PowerShell na pasta do projeto e execute:
-   ```bash
-   python -m shopee_label_printer
-   ```
-4. Selecione seu ZIP da Shopee, confira o preview, escolha a impressora e clique em **"Imprimir"**
-
-## 📋 Requisitos
-
-### Sistema
-- **Windows 10/11** (alvo principal)
-- **Python 3.10+** (se rodar como script Python)
-- Uma **impressora térmica compatível com TSPL/ZPL** (ex: FY-1075 203 DPI)
-
-### Impressora
-A impressora deve:
-- Estar instalada e conectada no Windows antes de abrir o programa
-- Aparecer em **Painel de Controle > Dispositivos e Impressoras**
-- Ser compatível com comandos TSPL/ZPL (a maioria das térmicas de etiqueta funciona)
-
-## 🚀 Como usar
-
-1. **Importar**: Clique em **"Importar ZIP / Pasta / TXT"** e selecione o arquivo da Shopee
-2. **Conferir**: Veja a lista de etiquetas encontradas e **o preview de cada uma**
-3. **Selecionar impressora**: Escolha sua impressora térmica no dropdown
-4. **Imprimir**: Clique em **"Imprimir todas"** ou selecione algumas e clique em **"Selecionadas"**
-5. **Log**: Acompanhe o andamento — ele avisa se alguma etiqueta falhou
-
-## 🔍 Como funciona o preview
-
-A etiqueta da Shopee traz o desenho embutido como um bitmap nos comandos `~DG` / `^GFA`.
-O preview decodifica esse bitmap e mostra **1 pixel para cada ponto impresso** — ou seja,
-exatamente o que vai sair na FY-1075 (203 DPI, 812 × 1218 pontos numa etiqueta 100 × 150 mm).
-
-São aceitos os três formatos que a ZPL usa para o campo gráfico: hexadecimal puro,
-hexadecimal com compressão ASCII (`G-Y`, `g-z`, `,`, `!`, `:`) e `:Z64:` / `:B64:`.
-Comandos vetoriais (`^GB`, `^FD`, `^BC` Code 128) são desenhados por cima.
-
-Para caber na tela, a imagem é reduzida por **média de área** e não por vizinho mais
-próximo — sem isso, as barras de 1 ponto do código de barras sumiriam na redução.
-
-> O preview **nunca altera os bytes** que vão para a impressora: ele só lê. O envio
-> continua sendo o arquivo original, byte a byte.
-
-## 📁 Estrutura do Projeto
-
-```
-shopee-label-printer/
-├── src/
-│   └── shopee_label_printer/
-│       ├── __init__.py          # Pacote
-│       ├── __main__.py          # Ponto de entrada (python -m)
-│       ├── app.py               # Interface gráfica (tkinter) + preview
-│       ├── parser.py            # Extração de ZIP + separação de etiquetas
-│       ├── printer.py           # Envio RAW + listagem de impressoras
-│       ├── renderer.py          # Decodificação ZPL -> imagem (preview)
-│       ├── config.py            # Configuração persistente
-│       ├── logger.py            # Log em arquivo + tela
-│       ├── utils.py             # Ordenação de impressoras, formatação
-│       └── validators.py        # Validação de etiquetas
-├── tests/                       # 125 testes automatizados
-├── docs/                        # ► APLICATIVO WEB (GitHub Pages)
-│   ├── index.html               # Interface
-│   ├── app.js                   # Lógica da tela
-│   ├── zip.js                   # Leitura de ZIP (DecompressionStream)
-│   ├── zpl.js                   # Renderizador ZPL (porta de renderer.py)
-│   └── style.css
-├── LEIA-ME.md                   # Instruções de uso (português)
-├── PLANO_DESENVOLVIMENTO.md     # Roadmap detalhado (5 fases)
-├── CHANGELOG.md                 # Histórico de versões
-├── LICENSE                      # MIT
-└── README.md                    # Este arquivo
-```
-
-### Versão web em desenvolvimento
-
-A pasta `docs/` é servida direto pelo GitHub Pages — não há build. Para testar local:
-
+### 🐍 Python Version
 ```bash
-cd docs && python -m http.server 8000
-# abra http://localhost:8000
+python -m shopee_label_printer
+```
+Requires Python 3.10+ with `pip install` (zero external dependencies)
+
+---
+
+## 🎯 What It Does
+
+✅ **Import** Shopee ZIP files, folders, or individual TXT/ZPL/PRN/TSPL files  
+✅ **Auto-separate** multiple concatenated labels in a single file  
+✅ **Preview** each label at native 203 DPI before printing  
+✅ **Send RAW** to thermal printers with zero quality loss (desktop only)  
+✅ **100% Local** — your recipient addresses never leave your computer  
+✅ **Zero Dependencies** — uses only Python standard library (no `pip install` needed)  
+✅ **Cross-Platform Web** — run on Windows, Mac, Linux, or mobile browsers  
+
+---
+
+## 📊 Feature Comparison
+
+| Feature | 💻 Desktop (.exe) | 🌐 Web | 🐍 Python CLI |
+|---------|:---:|:---:|:---:|
+| Import Shopee ZIP | ✅ | ✅ | ✅ |
+| Auto-separate labels | ✅ | ✅ | ✅ |
+| 203 DPI preview | ✅ | ✅ | ✅ |
+| **RAW send (max quality)** | ✅ | ❌ | ✅ |
+| Print via system driver | — | ✅ | ❌ |
+| Batch print multiple labels | ✅ | ❌ | ✅ |
+| Export PNG/PDF | — | ✅ | ❌ |
+| No installation needed | — | ✅ | — |
+| Works on Mac/Linux | ❌ | ✅ | ✅ |
+| Data stays on device | ✅ | ✅ | ✅ |
+| Customizable heat/speed | ✅ | ✅ | ✅ |
+
+**Both desktop and web use the same decoding algorithm**, so previews are identical. The difference is how each connects to the printer.
+
+> **Why doesn't the web version use RAW mode?**  
+> Browser sandboxing prevents direct access to printer hardware. The web version prints through your OS driver at the exact physical size (100 × 150 mm). For byte-perfect output on thermal printers, use the desktop version.
+
+**Recommended workflow:** Preview labels in the browser on any device, then print via desktop for maximum quality.
+
+---
+
+## 🖥️ System Requirements
+
+### Windows Desktop / .exe
+- **Windows 10/11** (64-bit)
+- Thermal printer with **TSPL/ZPL support** (e.g., Godex/ZebraLink FY-1075 at 203 DPI)
+- USB or network connection to printer
+
+### Web Version
+- Modern browser (Chrome 80+, Edge 80+, Firefox 113+, Safari 16.4+)
+- No software installation required
+- Works on Windows, Mac, Linux, iOS, Android
+
+### Python Version
+- Python 3.10 or later
+- Windows 10/11 (printer connectivity via `winspool.drv`)
+- macOS/Linux support available (uses CUPS, not fully tested)
+
+---
+
+## 🚀 How to Use
+
+### Desktop / .exe
+1. **Import**: Click "Import ZIP / Folder / TXT" and select a Shopee file
+2. **Preview**: View the label list and individual label previews at 203 DPI
+3. **Select printer**: Choose your thermal printer from the dropdown
+4. **Print**: Click "Print All" or select specific labels and click "Print Selected"
+5. **Monitor**: Watch the log for any errors or warnings
+
+### Web Version
+1. Open https://brunotrolo.github.io/Shopee_Printer/
+2. Drag your ZIP file into the drop zone (or click to select)
+3. Choose print mode: **ZPL** (raw native), **TSPL** (FY-1075 compatible), or **PDF**
+4. Adjust output boost if needed (Leve/Médio/Forte/Customizado)
+5. Download or print via browser
+
+### Python CLI
+```bash
+python -m shopee_label_printer [--zip-path PATH] [--print-all] [--printer-name NAME]
 ```
 
-`docs/zpl.js` é uma porta fiel de `src/shopee_label_printer/renderer.py`.
-**Mudou a decodificação num? Mude no outro** — os dois devem produzir a mesma
-imagem para a mesma etiqueta.
+---
 
-## 🔧 Desenvolvimento
+## 🔍 How the Preview Works
 
-### Rodar os testes
+Shopee labels include embedded graphics via `~DG` / `^GFA` commands. The preview:
 
+- **Decodes the bitmap** from ZPL hexadecimal (raw, ASCII-compressed, Base64)
+- **Renders 1:1** at 203 DPI (812 × 1218 pixels = 100 × 150 mm)
+- **Scales for display** using area averaging (preserves 1-pixel barcode details)
+- **Draws vector elements** (Code 128 barcodes, lines, text) on top
+
+The preview **never modifies** the bytes sent to the printer — it's read-only. The printer receives the original file byte-for-byte.
+
+---
+
+## 📁 Project Structure
+
+```
+Shopee-Label-Print/
+├── src/shopee_label_printer/
+│   ├── __init__.py              # Package metadata
+│   ├── __main__.py              # Entry point (python -m)
+│   ├── app.py                   # GUI (tkinter) + preview
+│   ├── parser.py                # ZIP extraction + label separation
+│   ├── printer.py               # RAW send + printer list
+│   ├── renderer.py              # ZPL → image decoding
+│   ├── converters.py            # ZPL → TSPL/PDF conversion
+│   ├── config.py                # Persistent settings
+│   ├── logger.py                # File + console logging
+│   ├── utils.py                 # Printer ordering, formatting
+│   └── validators.py            # Label validation
+├── tests/                       # 125+ automated tests
+├── docs/                        # Web app (GitHub Pages)
+│   ├── index.html
+│   ├── app.js                   # Frontend logic
+│   ├── zpl.js                   # ZPL decoder (JavaScript port)
+│   ├── converters.js            # Format conversion
+│   └── style.css
+├── README.md                    # This file
+├── LEIA-ME.md                   # Portuguese guide
+├── PLANO_DESENVOLVIMENTO.md     # Technical roadmap (5 phases)
+├── CHANGELOG.md                 # Version history
+├── LICENSE                      # MIT License
+└── ShopeeLabelPrinter.spec      # PyInstaller config
+```
+
+---
+
+## 🔧 Development & Building
+
+### Run Tests
 ```bash
 pip install pytest
 pytest tests/
 ```
 
-### Módulos
+### Build Desktop .exe
+**Option 1: Automatic (via GitHub Actions)**
+1. Go to [Actions](https://github.com/brunotrolo/Shopee_Printer/actions)
+2. Select "Build Executável" → Run workflow
+3. Download the `.exe` from the completed run
 
-- **`parser.py`**: Extração de ZIP, busca de arquivos, separação de etiquetas
-- **`printer.py`**: Listagem de impressoras, envio RAW via winspool/lp
-- **`renderer.py`**: Decodificação do ZPL em imagem, para o preview
-- **`app.py`**: Interface gráfica em tkinter
-
-Isso permite testar parsing, decodificação e impressão sem precisar de GUI nem de impressora real.
-
-### Gerar .exe standalone
-
+**Option 2: Manual with PyInstaller**
 ```bash
 pip install pyinstaller
-pyinstaller --onefile --windowed --name "ShopeeLabelPrinter" src/shopee_label_printer/app.py
+pyinstaller ShopeeLabelPrinter.spec --onefile --windowed
+# Output: dist/ShopeeLabelPrinter.exe
 ```
 
-O `.exe` será criado em `dist/ShopeeLabelPrinter.exe`.
+### Local Web Development
+```bash
+cd docs
+python -m http.server 8000
+# Open http://localhost:8000
+```
 
-## 📊 Roadmap
-
-Veja [PLANO_DESENVOLVIMENTO.md](PLANO_DESENVOLVIMENTO.md) para o plano detalhado em 5 fases:
-
-1. ✅ **Fase 0**: Fundação do repositório (estrutura de pastas, modularização)
-2. ⏳ **Fase 1**: Estabilização — tratamento de erros e logging prontos; **falta o teste na FY-1075**
-3. ✅ **Fase 2**: Empacotamento profissional (CI/CD, GitHub Actions, GitHub Releases)
-4. ✅ **Fase 3**: Robustez de parsing (casos-limite, decodificação de gráficos)
-5. ✅ **Fase 4-5**: UX + preview + versão web no GitHub Pages
-
-## ⚠️ Limitações Conhecidas
-
-- **Teste em hardware real ainda não foi feito** — a lógica e a decodificação foram validadas com testes automatizados, mas a impressão na FY-1075 continua sendo o bloqueador do 1.0.0
-- A **versão web não imprime em RAW** — nenhum navegador consegue; ela imprime pelo driver do sistema, no tamanho físico exato
-- **QR Code (`^BQ`) aparece como marcador** no preview, não decodificado. Na prática isso raramente aparece: a Shopee manda a etiqueta inteira como bitmap, e aí o QR vem desenhado dentro dele — o que é renderizado normalmente
-- Envio RAW oficialmente só no Windows (macOS/Linux têm fallback para CUPS, não testado)
-- A impressora deve estar instalada antes de abrir o programa
-
-## 🤝 Contribuição
-
-Este é um projeto pessoal/pequeno. Contribuições em forma de:
-- Relatos de bug
-- Testes em diferentes impressoras
-- Melhorias na documentação
-- Sugestões de features
-
-...são bem-vindas! Abra uma issue ou pull request.
-
-## 📄 Licença
-
-MIT — veja [LICENSE](LICENSE) para detalhes.
-
-## 📧 Contato
-
-Bruno Trolo — [@brunotrolo](https://github.com/brunotrolo)
+**Important:** `docs/zpl.js` must mirror `src/shopee_label_printer/renderer.py` — changes to one must be ported to the other.
 
 ---
 
-**Dúvidas?** Leia o [LEIA-ME.md](LEIA-ME.md) para instruções de uso ou o [PLANO_DESENVOLVIMENTO.md](PLANO_DESENVOLVIMENTO.md) para detalhes técnicos.
+## 📊 Roadmap
+
+See [PLANO_DESENVOLVIMENTO.md](PLANO_DESENVOLVIMENTO.md) for detailed 5-phase plan:
+
+1. ✅ **Phase 0**: Project foundation (structure, modules)
+2. ⏳ **Phase 1**: Stability — error handling, logging (pending FY-1075 hardware test)
+3. ✅ **Phase 2**: Professional packaging (CI/CD, GitHub Actions, Releases)
+4. ✅ **Phase 3**: Robust parsing (edge cases, graphic decoding)
+5. ✅ **Phase 4–5**: UX, preview, web version on GitHub Pages
+
+---
+
+## ⚠️ Known Limitations
+
+- **Hardware test pending** — logic and decoding validated with 125+ tests, but real FY-1075 printing not yet verified (blocker for v1.0.0)
+- **Web version doesn't send RAW** — browser sandbox restriction; prints via OS driver instead
+- **QR codes** (`^BQ`) render as a marker in preview (rarely occurs; Shopee usually embeds QR in the bitmap)
+- **Macros and barcode overlays** not supported (etiquetas with vector elements outside the embedded bitmap are rejected)
+- **All boost levels currently produce identical results** — this is a known limitation being addressed separately; custom boost controls are included for future flexibility
+
+---
+
+## 🐛 Troubleshooting
+
+### Empty printer list?
+- Printer must be installed and connected before opening the app
+- Check **Control Panel > Devices and Printers**
+- Try restarting the application
+
+### Labels look faint or dark?
+- Desktop: Adjust **Boost Level** (Leve/Médio/Forte/Customizado) before printing
+- Web: Use **Modo de Saída** dropdown + Boost settings (TSPL/ZPL)
+- Note: Boost controls are included for future use; current FY-1075 printer produces identical output regardless of boost level
+
+### Preview shows nothing?
+- Ensure the Shopee ZIP contains valid ZPL/TSPL files
+- Check that the file isn't corrupted
+- Try exporting as PNG first to isolate the issue
+
+### Can't print from web version?
+- Use the desktop version for RAW mode printing
+- Web version works best for preview and export (PNG, PDF)
+
+---
+
+## 📈 SEO Keywords
+
+*Shopee label printer | thermal label printer | ZPL to TSPL converter | shipping label software | Godex printer tool | FY-1075 label software | Brazilian shipping labels | etiqueta Shopee | impressora térmica | conversor ZPL | print Shopee labels | label thermal printer | ZPL TSPL conversion*
+
+---
+
+## 🤝 Contributing
+
+This is an active project. Contributions welcome:
+- Bug reports and fixes
+- Hardware testing (especially FY-1075)
+- Documentation improvements
+- Feature suggestions
+
+Open an issue or pull request on [GitHub](https://github.com/brunotrolo/Shopee_Printer).
+
+---
+
+## 📄 License
+
+MIT License — see [LICENSE](LICENSE) for details.
+
+---
+
+## 📞 Contact & Support
+
+**Bruno Trolo** — [@brunotrolo](https://github.com/brunotrolo)
+
+Questions? Read:
+- [LEIA-ME.md](LEIA-ME.md) — Portuguese user guide
+- [PLANO_DESENVOLVIMENTO.md](PLANO_DESENVOLVIMENTO.md) — Technical details
+- [CHANGELOG.md](CHANGELOG.md) — Version history
+
+---
+
+**Last updated:** August 2026  
+**Version:** v0.3.1+ (pending FY-1075 hardware test)

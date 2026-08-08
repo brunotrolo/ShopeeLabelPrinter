@@ -12,6 +12,36 @@ e este projeto segue [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 - ⏳ Renderização de QR Code no preview (hoje aparece como marcador)
 - ⏳ Impressão de várias etiquetas de uma vez na versão web
 - ⏳ Suporte a múltiplos idiomas (i18n)
+- ⏳ Solução para ilegibilidade de etiquetas (investigação em andamento)
+
+### Notas de Desenvolvimento
+- **Limitação Conhecida: Reforço (Boost) sem efeito** — todos os níveis de 
+  reforço (Leve/Médio/Forte/Customizado) produzem resultado idêntico na FY-1075 
+  atual. Os controles foram mantidos para futuras melhorias e compatibilidade 
+  com outras impressoras. A ilegibilidade das etiquetas é uma questão separada 
+  sendo investigada.
+
+## [0.3.1] - 2026-08-08
+
+### Adicionado
+- **Controles de reforço customizáveis**: Leve (DENSITY=12, SPEED=2), Médio 
+  (DENSITY=15, SPEED=2), Forte (DENSITY=15, SPEED=1), Customizado (ajuste manual), 
+  Desligado (bytes originais)
+- **Ajustes de interface web**: melhor responsividade, layout otimizado para 
+  telas menores, redução de espaço lateral em telas largas
+- **Toggle de tema claro/escuro** na versão web, com suporte a preferência do 
+  sistema, armazenamento em localStorage e três modos (Sistema/Claro/Escuro)
+- **Meta tags SEO** melhoradas em `docs/index.html` para melhor descoberta no Google
+- **Documentação profissionalizada**: README.md e LEIA-ME.md com estrutura clara, 
+  palavras-chave de SEO e instruções detalhadas
+- **Padrões como defaults**: "Leve" como nível de reforço padrão, "TSPL" como 
+  modo de saída padrão
+
+### Corrigido
+- **Layout da toolbar de preview**: labels e selects não mais quebram para linhas 
+  separadas em telas menores
+- **Inversão de polaridade TSPL**: bitmap agora é invertido corretamente (XOR com 0xFF) 
+  antes do envio TSPL, corrigindo impressão com cores invertidas
 
 ## [0.5.0] - 2026-08-08
 
