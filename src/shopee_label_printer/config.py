@@ -33,6 +33,9 @@ class Config:
         'last_directory': None,
         'print_history': [],  # Lista dos últimos impressos
         'theme': 'auto',  # auto, light, dark
+        'auto_import_enabled': True,
+        'auto_import_interval_ms': 5000,
+        'auto_import_loaded_files': [],  # Rastrear arquivos já importados
     }
 
     @classmethod
