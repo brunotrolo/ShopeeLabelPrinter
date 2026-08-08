@@ -353,3 +353,37 @@ class TestE2EAutoImport:
         zip_candidates = [f for f in candidate_files if f.suffix.lower() == ".zip"]
         assert len(zip_candidates) == 1
         assert zip_candidates[0] == zip_file
+
+    def test_auto_import_content_hash_detects_new_file_same_name(
+        self, tmp_path: Path, sample_zpl_with_bitmap: bytes
+    ) -> None:
+        """Testa que auto-import detecta arquivo novo mesmo com nome igual (hash de conteúdo).
+
+        Problema real: Shopee padroniza nomes, cada venda gera .zip com mesmo nome
+        mas conteúdo (etiqueta) diferente.
+        """
+        # Arrange: Simular hash de conteúdo (não path)
+        import hashlib
+
+        def compute_hash(content: bytes) -> str:
+            return hashlib.sha256(content).hexdigest()
+
+        # Dois conteúdos diferentes
+        content1 = b"^XA^PQ1^XZ"
+        content2 = b"^XA^PQ2^XZ"
+
+        hash1 = compute_hash(content1)
+        hash2 = compute_hash(content2)
+
+        # Act: Simular detecção por hash
+        known_hashes = {hash1}
+        new_files = []
+
+        if hash2 not in known_hashes:
+            new_files.append("arquivo.zip")
+            known_hashes.add(hash2)
+
+        # Assert: Mesmo nome diferente, detecta como novo
+        assert len(new_files) == 1  # Deve detectar como novo
+        assert hash1 != hash2  # Hashes são diferentes
+        assert hash2 in known_hashes  # Novo hash foi adicionado

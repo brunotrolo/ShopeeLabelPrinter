@@ -6,6 +6,7 @@ O preview é reconstruído a partir dos mesmos bytes que vão para a impressora,
 mas nunca os altera — o envio continua sendo RAW, byte a byte.
 """
 
+import hashlib
 import math
 import os
 import tkinter as tk
@@ -492,6 +493,29 @@ class ShopeePrintApp(tk.Tk):
         """Retorna caminho da pasta Downloads do usuário."""
         return Path.home() / "Downloads"
 
+    def _compute_file_hash(self, filepath: Path) -> str:
+        """Calcula hash SHA256 do conteúdo do arquivo para detecção de duplicatas.
+
+        Rastreia por conteúdo, não por nome, para detectar arquivos novos mesmo
+        que tenham o mesmo nome que anteriores (problema comum com .zip da Shopee).
+
+        Args:
+            filepath: Caminho do arquivo
+
+        Returns:
+            Hash SHA256 em hexadecimal
+        """
+        sha256_hash = hashlib.sha256()
+        try:
+            with open(filepath, "rb") as f:
+                for byte_block in iter(lambda: f.read(4096), b""):
+                    sha256_hash.update(byte_block)
+            return sha256_hash.hexdigest()
+        except Exception as e:
+            self._log(f"⚠️  Erro ao calcular hash de {filepath.name}: {e}")
+            # Em caso de erro, usa nome do arquivo como fallback
+            return str(filepath.resolve())
+
     def _auto_load_from_downloads(self) -> int:
         """Carrega automaticamente arquivos ZPL novos da pasta Downloads.
 
@@ -523,18 +547,20 @@ class ShopeePrintApp(tk.Tk):
             if candidate_files:
                 self._log(f"🔍 Auto-import: encontrados {len(candidate_files)} arquivo(s) candidato(s)")
 
-            # Carregar hashes conhecidos
-            known_files = set(Config.get("auto_import_loaded_files", []))
+            # Carregar hashes conhecidos (agora por conteúdo, não por path)
+            known_file_hashes = set(Config.get("auto_import_loaded_files", []))
 
-            # Detectar novos arquivos
+            # Detectar novos arquivos (por hash do conteúdo)
             new_files: list[Path] = []
             for filepath in candidate_files:
-                file_hash = str(filepath.resolve())
-                if file_hash not in known_files:
+                # Hash do conteúdo do arquivo, não do path
+                # Isso detecta arquivos novos mesmo com nome igual
+                content_hash = self._compute_file_hash(filepath)
+                if content_hash not in known_file_hashes:
                     new_files.append(filepath)
-                    known_files.add(file_hash)
+                    known_file_hashes.add(content_hash)
                 else:
-                    self._log(f"⊙ {filepath.name} já carregado anteriormente")
+                    self._log(f"⊙ {filepath.name} já carregado anteriormente (conteúdo idêntico)")
 
             if not new_files:
                 return 0
@@ -556,8 +582,8 @@ class ShopeePrintApp(tk.Tk):
                 except Exception as e:  # noqa: BLE001
                     self._log(f"⚠️  Erro inesperado ao carregar {filepath.name}: {e}")
 
-            # Atualizar config com novos hashes
-            Config.set("auto_import_loaded_files", sorted(list(known_files)))
+            # Atualizar config com novos hashes de conteúdo
+            Config.set("auto_import_loaded_files", sorted(list(known_file_hashes)))
 
             # Atualizar status se foram adicionados novos
             if new_count > 0:
